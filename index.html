@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Test : À quel % es-tu autiste ?</title>
+<meta name="theme-color" content="#FFF1C9">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Bagel+Fat+One&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#111111; --cream:#FFF1C9; --pink:#FF6FA8; --yellow:#FFD93D;
+    --blue:#4D96FF; --green:#5FD38D; --purple:#A66BFF; --orange:#FF9F45;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;min-height:100%}
+  body{
+    font-family:'Space Grotesk',system-ui,sans-serif;
+    color:var(--ink);
+    background-color:var(--cream);
+    background-image:radial-gradient(rgba(17,17,17,.14) 1.5px, transparent 1.5px);
+    background-size:22px 22px;
+    overflow-x:hidden;
+  }
+  .display{font-family:'Bagel Fat One','Space Grotesk',system-ui,sans-serif;letter-spacing:.01em}
+
+  /* ---------- Neo-brutalism primitives ---------- */
+  .card{background:#fff;border:3px solid var(--ink);border-radius:20px;box-shadow:6px 6px 0 var(--ink)}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:.6rem;
+    font-weight:700;border:3px solid var(--ink);border-radius:16px;
+    box-shadow:5px 5px 0 var(--ink);cursor:pointer;background:var(--yellow);color:var(--ink);
+    transition:transform .12s ease, box-shadow .12s ease, background .2s;
+    user-select:none;font-family:inherit;
+  }
+  .btn:hover{transform:translate(-2px,-2px) rotate(-1.2deg);box-shadow:8px 8px 0 var(--ink)}
+  .btn:active{transform:translate(5px,5px);box-shadow:0 0 0 var(--ink)}
+  .btn:focus-visible{outline:4px solid var(--blue);outline-offset:3px}
+
+  .answer{
+    width:100%;text-align:left;display:flex;gap:.8rem;align-items:flex-start;
+    padding:.85rem 1rem;background:#fff;border:3px solid var(--ink);border-radius:16px;
+    box-shadow:4px 4px 0 var(--ink);cursor:pointer;font-weight:500;line-height:1.3;font-family:inherit;font-size:1rem;color:var(--ink);
+    transition:transform .12s ease, box-shadow .12s ease, background .2s;
+    position:relative;
+  }
+  .answer .letter{
+    flex:0 0 auto;width:2rem;height:2rem;display:grid;place-items:center;
+    border:3px solid var(--ink);border-radius:10px;font-weight:700;background:var(--yellow);
+    transition:transform .2s;
+  }
+  .answer:hover{transform:translate(-2px,-2px) rotate(-.8deg);box-shadow:7px 7px 0 var(--ink);background:#FFFBEA}
+  .answer:hover .letter{transform:rotate(-10deg) scale(1.1)}
+  .answer:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--ink)}
+  .answer.locked{pointer-events:none}
+  .answer.picked{background:var(--green);animation:pickpop .45s cubic-bezier(.3,1.6,.5,1)}
+  .answer.dim{opacity:.45;transform:scale(.98)}
+  .answer .tag{
+    position:absolute;right:-6px;top:-14px;background:var(--ink);color:#fff;font-size:.7rem;
+    padding:.15rem .55rem;border-radius:999px;transform:rotate(4deg);font-weight:700;
+    animation:tagin .35s cubic-bezier(.3,1.6,.5,1);
+  }
+  @keyframes pickpop{0%{transform:scale(1)}40%{transform:scale(1.04) rotate(1deg)}100%{transform:scale(1)}}
+  @keyframes tagin{from{transform:scale(0) rotate(-20deg)}to{transform:scale(1) rotate(4deg)}}
+
+  /* ---------- Screens ---------- */
+  .screen{display:none}
+  .screen.active{display:block}
+  .screen.enter{animation:enter .5s cubic-bezier(.2,1.2,.4,1)}
+  .screen.leave{animation:leave .25s ease-in forwards}
+  @keyframes enter{from{opacity:0;transform:translateY(30px) scale(.96) rotate(-1deg)}to{opacity:1;transform:none}}
+  @keyframes leave{to{opacity:0;transform:translateX(-40px) scale(.96) rotate(-2deg)}}
+  .qcard-in{animation:qin .45s cubic-bezier(.2,1.2,.4,1)}
+  @keyframes qin{from{opacity:0;transform:translateX(50px) rotate(2deg)}to{opacity:1;transform:none}}
+
+  /* ---------- Progress ---------- */
+  #progressWrap{
+    position:fixed;left:0;right:0;top:0;height:16px;background:#fff;border-bottom:3px solid var(--ink);z-index:40;
+    transform:translateY(-110%);transition:transform .4s ease;
+  }
+  #progressWrap.on{transform:none}
+  #progressBar{
+    height:100%;width:0%;border-right:3px solid var(--ink);
+    background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.35) 0 10px,transparent 10px 20px);
+    background-size:28px 28px;animation:stripes 1s linear infinite;
+    transition:width .6s cubic-bezier(.2,1.2,.4,1), background-color .6s;
+  }
+  @keyframes stripes{to{background-position:28px 0}}
+
+  /* ---------- Floating reactions ---------- */
+  .floaty{
+    position:fixed;z-index:80;pointer-events:none;font-weight:700;white-space:nowrap;
+    padding:.35rem .8rem;border:3px solid var(--ink);border-radius:999px;box-shadow:3px 3px 0 var(--ink);
+    animation:floatup 1.5s cubic-bezier(.2,.8,.3,1) forwards;font-size:.95rem;
+  }
+  @keyframes floatup{
+    0%{opacity:0;transform:translate(-50%,10px) scale(.4) rotate(var(--r,0deg))}
+    15%{opacity:1;transform:translate(-50%,-10px) scale(1.15) rotate(var(--r,0deg))}
+    70%{opacity:1}
+    100%{opacity:0;transform:translate(-50%,-90px) scale(1) rotate(var(--r,0deg))}
+  }
+
+  /* ---------- Loading ---------- */
+  #gauge{
+    height:100%;width:0%;background:var(--pink);border-right:3px solid var(--ink);
+    background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.4) 0 10px,transparent 10px 20px);
+    animation:stripes .6s linear infinite;
+  }
+  .radar{
+    width:150px;height:150px;border-radius:50%;border:4px solid var(--ink);background:#fff;position:relative;
+    box-shadow:6px 6px 0 var(--ink);overflow:hidden;
+    background-image:radial-gradient(circle,transparent 0 22%,rgba(17,17,17,.2) 22% 24%,transparent 24% 46%,rgba(17,17,17,.2) 46% 48%,transparent 48% 70%,rgba(17,17,17,.2) 70% 72%,transparent 72%);
+  }
+  .radar::before{
+    content:"";position:absolute;inset:0;border-radius:50%;
+    background:conic-gradient(from 0deg,rgba(95,211,141,.9),rgba(95,211,141,0) 35%,transparent 100%);
+    animation:spin 1.2s linear infinite;
+  }
+  .radar i{position:absolute;width:12px;height:12px;border-radius:50%;background:var(--pink);border:2px solid var(--ink);animation:blip 1.2s infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes blip{0%,100%{transform:scale(.6);opacity:.4}50%{transform:scale(1.2);opacity:1}}
+
+  /* ---------- Result ---------- */
+  .statbar{height:22px;background:#fff;border:3px solid var(--ink);border-radius:999px;overflow:hidden}
+  .statfill{height:100%;width:0%;border-right:3px solid var(--ink);transition:width 1.4s cubic-bezier(.2,1,.3,1);
+    background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.3) 0 8px,transparent 8px 16px);}
+  .statfill.zero{border-right:none}
+  .bigpct{
+    display:inline-block;font-size:clamp(4.5rem,22vw,7.5rem);line-height:1.05;
+    background:linear-gradient(90deg,#FF6FA8,#FFD93D,#5FD38D,#4D96FF,#A66BFF,#FF6FA8);
+    background-size:300% 100%;
+    -webkit-background-clip:text;background-clip:text;
+    color:transparent;-webkit-text-fill-color:transparent;
+    -webkit-text-stroke:3px #111;paint-order:stroke fill;
+    filter:drop-shadow(6px 6px 0 #111);
+    animation:rainbow 3s linear infinite;
+  }
+  @keyframes rainbow{to{background-position:300% 0}}
+  #actionBar{
+    position:fixed;left:0;right:0;bottom:0;z-index:70;padding:.75rem 1rem calc(.75rem + env(safe-area-inset-bottom));
+    background:var(--cream);border-top:3px solid var(--ink);
+    transform:translateY(120%);transition:transform .5s cubic-bezier(.3,1.4,.5,1);
+  }
+  #actionBar.on{transform:none}
+  #actionBar .inner{max-width:36rem;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+  #actionBar .btn{padding:.9rem .5rem;font-size:1rem}
+  @media (min-width:480px){ #actionBar .btn{font-size:1.1rem} }
+
+  /* ---------- Misc ---------- */
+  .bob{animation:bob 2.4s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-12px) rotate(4deg)}}
+  .wiggle:hover{animation:wig .5s ease}
+  @keyframes wig{0%,100%{transform:rotate(0)}25%{transform:rotate(-2deg) scale(1.02)}75%{transform:rotate(2deg) scale(1.02)}}
+  .bgshape{position:fixed;font-size:2.4rem;opacity:.5;pointer-events:none;z-index:0;animation:drift 9s ease-in-out infinite}
+  @keyframes drift{0%,100%{transform:translateY(0) rotate(-8deg)}50%{transform:translateY(-22px) rotate(10deg)}}
+  #cursor{
+    position:fixed;left:0;top:0;width:26px;height:26px;border:3px solid var(--ink);border-radius:50%;
+    pointer-events:none;z-index:200;background:rgba(255,217,61,.55);
+    transition:width .15s,height .15s,background .15s,margin .15s;display:none;margin:-13px 0 0 -13px;
+  }
+  #cursor.big{width:46px;height:46px;margin:-23px 0 0 -23px;background:rgba(255,111,168,.55)}
+  @media (pointer:fine){ #cursor{display:block} body, button{cursor:none !important} }
+  #toast{
+    position:fixed;left:50%;bottom:100px;transform:translate(-50%,200px);z-index:150;
+    background:var(--green);border:3px solid var(--ink);border-radius:14px;box-shadow:5px 5px 0 var(--ink);
+    padding:.7rem 1.2rem;font-weight:700;transition:transform .35s cubic-bezier(.3,1.6,.5,1);
+  }
+  #toast.on{transform:translate(-50%,0)}
+  @media (prefers-reduced-motion:reduce){
+    *{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
+  }
+</style>
+</head>
+<body>
+
+<div id="cursor"></div>
+<div id="toast">Copié ! ✅</div>
+
+<!-- décor -->
+<div class="bgshape" style="left:4%;top:18%">🥄</div>
+<div class="bgshape" style="right:5%;top:30%;animation-delay:-3s">📑</div>
+<div class="bgshape" style="left:8%;bottom:12%;animation-delay:-5s">🔊</div>
+<div class="bgshape" style="right:9%;bottom:8%;animation-delay:-2s">🧠</div>
+
+<!-- progression -->
+<div id="progressWrap"><div id="progressBar"></div></div>
+
+<!-- bouton mute (emoji natif, zéro librairie) -->
+<button id="muteBtn" class="btn" aria-label="Couper ou activer le son" style="position:fixed;right:14px;top:30px;z-index:60;width:50px;height:50px;border-radius:14px;background:#fff;padding:0;font-size:1.5rem;line-height:1">🔊</button>
+
+<!-- combo -->
+<div id="comboChip" class="btn" style="position:fixed;left:14px;top:30px;z-index:60;padding:.4rem .8rem;background:var(--purple);color:#fff;display:none;pointer-events:none">
+  🔥 Combo de sincérité <span id="comboNum" class="display" style="margin-left:.2rem">x0</span>
+</div>
+
+<main class="relative z-10 mx-auto w-full max-w-xl px-4 pt-24 pb-16">
+
+  <!-- ========== INTRO ========== -->
+  <section id="intro" class="screen active">
+    <div class="card p-6 sm:p-8 text-center">
+      <div class="bob text-7xl mb-2 inline-block">🧠</div>
+      <p class="inline-block px-3 py-1 mb-3 text-xs font-bold border-[3px] border-black rounded-full bg-[#FFD93D] -rotate-2">12 QUESTIONS • 2 MIN • 0% SÉRIEUX</p>
+      <h1 class="display text-4xl sm:text-5xl leading-tight mb-4">Test : À quel <span class="inline-block px-2 border-[3px] border-black bg-[#FF6FA8] text-white -rotate-2 rounded-lg">%</span> es-tu autiste&nbsp;?</h1>
+      <p class="text-lg font-bold mb-6">Le test ultime (et 0% scientifique) pour évaluer tes petites manies et tes hyperfixations entre potes.</p>
+      <button id="startBtn" class="btn display text-2xl px-8 py-4 w-full sm:w-auto bg-[#5FD38D]">🚀 Lancer le test</button>
+      <p class="mt-5 text-xs opacity-70">C'est pour rigoler, ce n'est pas un test médical et ça ne remplace aucun diagnostic. Réponds avec sincérité, et sans te prendre la tête. 💛</p>
+    </div>
+  </section>
+
+  <!-- ========== QUIZ ========== -->
+  <section id="quiz" class="screen">
+    <div class="flex items-center justify-between mb-3 mt-2">
+      <span id="qCount" class="display text-lg px-3 py-1 bg-white border-[3px] border-black rounded-xl shadow-[3px_3px_0_#111]">1/12</span>
+      <span class="text-xs font-bold opacity-70">Astuce : touches 1 à 4 ⌨️</span>
+    </div>
+    <div id="qCard" class="card p-5 sm:p-7"></div>
+  </section>
+
+  <!-- ========== CHARGEMENT ========== -->
+  <section id="loading" class="screen">
+    <div class="card p-6 sm:p-8 text-center">
+      <div class="flex justify-center mb-5"><div class="radar"><i style="left:60%;top:28%"></i><i style="left:30%;top:60%;animation-delay:-.4s"></i><i style="left:68%;top:66%;animation-delay:-.8s"></i></div></div>
+      <h2 class="display text-3xl mb-2">Analyse en cours…</h2>
+      <p id="loadMsg" class="font-bold min-h-[3.2rem] flex items-center justify-center text-lg">On démarre le calcul…</p>
+      <div class="statbar mt-4"><div id="gauge"></div></div>
+      <p id="loadPct" class="display text-2xl mt-3">0%</p>
+    </div>
+  </section>
+
+  <!-- ========== RÉSULTAT ========== -->
+  <section id="result" class="screen">
+    <div class="card p-5 sm:p-7 text-center" id="resCard">
+      <p class="display text-xl sm:text-2xl tracking-wide">TU ES AUTISTE À :</p>
+      <div class="bigpct display" id="bigPct">0%</div>
+      <div class="mt-2">
+        <div id="rankBox" class="inline-block px-4 py-2 border-[3px] border-black rounded-2xl shadow-[4px_4px_0_#111] -rotate-1">
+          <div class="text-3xl" id="rankEmoji">🧍</div>
+          <div class="display text-2xl sm:text-3xl" id="rankTitle">—</div>
+        </div>
+      </div>
+      <p id="rankDesc" class="mt-4 text-base sm:text-lg"></p>
+
+      <div id="stats" class="space-y-4 text-left mt-6 pt-5 border-t-[3px] border-dashed border-black"></div>
+
+      <p id="comboRes" class="mt-5 text-sm font-bold opacity-70"></p>
+    </div>
+    <p class="text-center text-xs mt-6 opacity-70">Quiz pour rire : aucune valeur de diagnostic. Tu es très bien comme tu es. 💛</p>
+    <div style="height:110px"></div>
+  </section>
+</main>
+
+<!-- boutons d'action toujours visibles sur l'écran de résultat -->
+<div id="actionBar">
+  <div class="inner">
+    <button id="copyBtn" class="btn display bg-[#4D96FF] text-white">📋 Copier mon score</button>
+    <button id="replayBtn" class="btn display bg-white">🔄 Recommencer le test</button>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   DONNÉES
+   ========================================================= */
+const TAGS = ["PNJ certifié", "Petite manie", "Ça sent le vécu", "Niveau boss final"];
+
+const STATS = [
+  { key:"hyperfocus", label:"Hyperfixation Wikipédia",        emoji:"🧠", color:"#FF6FA8" },
+  { key:"details",    label:"Intolérance aux bruits / détails", emoji:"🔊", color:"#4D96FF" },
+  { key:"social",     label:"Batterie sociale en PLS",         emoji:"🔋", color:"#FFD93D" },
+  { key:"logic",      label:"Rigidité des habitudes",          emoji:"📐", color:"#5FD38D" }
+];
+
+const QUESTIONS = [
+  { stat:"logic", emoji:"🔊", q:"Le volume de la télé ou de la voiture, c'est quoi ton délire ?",
+    a:[
+      { t:"Je mets au pif tant que j'entends, je regarde même pas le chiffre.", p:0, r:"Mode zen 😌" },
+      { t:"J'ai un chiffre préféré, mais si je tombe à côté c'est pas grave.", p:1, r:"Préférence soft 🙂" },
+      { t:"Faut que ça tombe sur un multiple de 5 ou un chiffre pair, sinon je supporte pas.", p:2, r:"Alerte manie détectée 🚨" },
+      { t:"Volume 17 ? Jamais. Je monte, je descends, je remets à 20, et là seulement je peux vivre.", p:3, r:"+25% Rigidité 📊" }
+    ]},
+  { stat:"hyperfocus", emoji:"🍝", q:"Ton « repas de sécurité » (celui qui te déçoit jamais) :",
+    a:[
+      { t:"Ça existe pas chez moi, je mange ce qui passe.", p:0, r:"Esprit libre 🦋" },
+      { t:"J'ai un plat préféré, mais 3 jours de suite max.", p:1, r:"Fidélité modérée 🍕" },
+      { t:"Je peux le manger toute la semaine sans me plaindre.", p:2, r:"+15% Routine sacrée 🍽️" },
+      { t:"14 jours d'affilée, même assiette, même sauce, et le 15e jour j'en veux encore.", p:3, r:"Contrat à vie signé 📜" }
+    ]},
+  { stat:"hyperfocus", emoji:"📚", q:"Il est 2h du mat'. Pourquoi t'as 47 onglets Wikipédia ouverts ?",
+    a:[
+      { t:"Je dors à 2h du mat', comme une personne normale.", p:0, r:"Sommeil réparateur 😴" },
+      { t:"J'ai lu un article ou deux, puis j'ai fermé.", p:1, r:"Curiosité raisonnable 📖" },
+      { t:"J'étais parti sur les dauphins, je suis maintenant sur l'histoire des phares.", p:2, r:"+20% Spirale Wikipédia 🌀" },
+      { t:"47 onglets sur un sujet ultra obscur, genre les ponts-levis suédois, et j'ai des avis.", p:3, r:"+30% Hyperfocus ! 🚀" }
+    ]},
+  { stat:"social", emoji:"📞", q:"Tu dois passer un coup de fil (rdv chez le médecin, par exemple).",
+    a:[
+      { t:"J'appelle, je parle, je raccroche. Easy.", p:0, r:"Aucune angoisse ☎️" },
+      { t:"Je souffle un coup, 5 min de prépa max.", p:1, r:"Petit stress sain 😅" },
+      { t:"J'écris ce que je vais dire, je repousse à demain, puis à après-demain.", p:2, r:"Batterie sociale : -10% 🔋" },
+      { t:"Je rejoue l'appel 3h dans ma tête avec toutes les variantes… puis je prends rdv en ligne.", p:3, r:"Simulation x1000 en cours 🎬" }
+    ]},
+  { stat:"details", emoji:"🥄", q:"Tu tombes sur une cuillère à la forme chelou.",
+    a:[
+      { t:"Une cuillère c'est une cuillère.", p:0, r:"Philosophie zen 🧘" },
+      { t:"Je remarque, je lève un sourcil, je mange quand même.", p:1, r:"Sourcil activé 🤨" },
+      { t:"Je vais chercher une autre cuillère. Celle-là, non.", p:2, r:"Tolérance cuillère : 3% 🥄" },
+      { t:"Mon repas est gâché. Je sais exactement à quoi ressemble la cuillère parfaite et c'est pas ça.", p:3, r:"+25% Cuillérologue 🔬" }
+    ]},
+  { stat:"details", emoji:"👕", q:"L'étiquette de ton t-shirt te gratte dans le cou.",
+    a:[
+      { t:"Quelle étiquette ?", p:0, r:"Peau de dragon 🐉" },
+      { t:"Ça me saoule un peu, je finis par la couper.", p:1, r:"Ciseaux en vue ✂️" },
+      { t:"Je coupe toutes les étiquettes de tous mes vêtements dès que je les achète.", p:2, r:"Protocole étiquette 🧵" },
+      { t:"Je pense plus qu'à ça. Même coupée, je la sens encore. L'étiquette fantôme.", p:3, r:"+20% Sensibilité max 👻" }
+    ]},
+  { stat:"social", emoji:"🚶", q:"Tu croises de loin quelqu'un que tu connais à peine, dans la rue.",
+    a:[
+      { t:"Je vais lui dire bonjour et on papote deux minutes.", p:0, r:"Papillon social 🦋" },
+      { t:"Petit coucou de la main sans m'arrêter.", p:1, r:"Salut tactique 👋" },
+      { t:"Je fais semblant d'être au téléphone.", p:2, r:"Mode fantôme activé 📱" },
+      { t:"Je calcule une trajectoire d'évitement digne de la NASA : autre trottoir, détour par la boulangerie, demi-tour.", p:3, r:"Trajectoire validée 🛰️" }
+    ]},
+  { stat:"social", emoji:"🔋", q:"Après une soirée de 3h avec des potes que t'adores :",
+    a:[
+      { t:"Je suis chaud pour la suite, on va où ?", p:0, r:"Batterie infinie ⚡" },
+      { t:"Un peu crevé, mais content.", p:1, r:"Batterie : 60% 🔋" },
+      { t:"J'ai besoin d'une journée entière toute seule pour récupérer.", p:2, r:"Batterie sociale : -40% 🪫" },
+      { t:"Batterie à 0%. Je disparais sous ma couette, 14 messages non lus que je lirai jeudi.", p:3, r:"Batterie sociale : -90% 🪫" }
+    ]},
+  { stat:"hyperfocus", emoji:"🎧", q:"Tu découvres une chanson qui te fait vibrer.",
+    a:[
+      { t:"Je l'écoute, puis je passe à autre chose.", p:0, r:"Léger comme l'air 🎈" },
+      { t:"Je l'ajoute à une playlist.", p:1, r:"Playlist enrichie 🎶" },
+      { t:"Je l'écoute 30 fois d'affilée, puis tout l'album.", p:2, r:"+20% Boucle infinie 🔁" },
+      { t:"Pendant 3 semaines, c'est la seule musique qui existe. J'ai lu la page Wikipédia du groupe, de l'ingé son et du studio.", p:3, r:"+30% Hyperfocus ! 🎸" }
+    ]},
+  { stat:"logic", emoji:"🍽️", q:"Quand tu charges le lave-vaisselle (ou que tu ranges un placard) :",
+    a:[
+      { t:"Je mets ce qui rentre, ça ira.", p:0, r:"Chaos assumé 🌪️" },
+      { t:"J'ai ma petite méthode, mais je dis rien si quelqu'un d'autre le fait.", p:1, r:"Diplomatie interne 🤝" },
+      { t:"Y a une façon logique de faire et je corrige en douce.", p:2, r:"Correction furtive 🥷" },
+      { t:"Y a un système optimal. J'ai des schémas en tête et je pourrais faire une thèse sur l'angle des assiettes.", p:3, r:"+25% Ingénierie vaisselle 📐" }
+    ]},
+  { stat:"details", emoji:"👀", q:"Tu entres dans une pièce. Tu remarques quoi en premier ?",
+    a:[
+      { t:"Les gens, l'ambiance générale.", p:0, r:"Vision d'ensemble 🖼️" },
+      { t:"Le truc qui détonne, genre un tableau de travers.", p:1, r:"Œil de lynx 🐱" },
+      { t:"Le bourdonnement du néon et la faute d'orthographe sur l'affiche.", p:2, r:"+20% Détecteur de fautes 🚩" },
+      { t:"Le néon, la faute, le tableau, le carrelage, et la plante qui a bougé depuis hier.", p:3, r:"Scan complet de la pièce 📡" }
+    ]},
+  { stat:"logic", emoji:"🧩", q:"Les règles pas écrites du quotidien (qui parle en premier dans l'ascenseur, quand raccrocher…) :",
+    a:[
+      { t:"Je les suis sans me poser de questions.", p:0, r:"Pilote automatique 🚗" },
+      { t:"Parfois je me demande pourquoi on fait ça, puis ça passe.", p:1, r:"Question en passant 💭" },
+      { t:"Je me suis fait mes propres règles pour m'en sortir. Un petit manuel perso.", p:2, r:"Manuel perso chargé 📘" },
+      { t:"J'ai un arbre de décision pour chaque situation sociale, avec plan B et plan C.", p:3, r:"Plan C prêt aussi 🌳" }
+    ]}
+];
+
+const TIERS = [
+  { max:20,  emoji:"🧍", title:"PNJ Certifié Standard", color:"#4D96FF",
+    desc:"Tout glisse chez toi, la vie est fluide. Tu es la preuve vivante que « ça va » existe. On t'envie un peu, pas gêné." },
+  { max:50,  emoji:"🕵️", title:"Suspect mais Discret", color:"#FFD93D",
+    desc:"Quelques manies bien planquées et deux-trois obsessions de salon. Personne se doute de rien… sauf toi, qui sais très bien pour la cuillère." },
+  { max:80,  emoji:"🏛️", title:"Architecte de Wikipédia", color:"#FF6FA8",
+    desc:"Tu construis des cathédrales de savoir inutile à 2h du mat'. Ton cerveau a des onglets ouverts depuis 2019, et c'est ça qui fait ton charme." },
+  { max:100, emoji:"👑", title:"Grand Maître de l'Hyperfocus", color:"#A66BFF",
+    desc:"Quand tu t'intéresses à un sujet, l'univers s'écarte. Tu as des systèmes, des règles et des avis sur tout. Respect éternel, et pense à boire de l'eau." }
+];
+
+/* =========================================================
+   OUTILS
+   ========================================================= */
+const $ = (id) => document.getElementById(id);
+const shuffle = (arr) => { const a = arr.slice(); for (let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+
+/* =========================================================
+   AUDIO (Web Audio API, zéro fichier externe)
+   ========================================================= */
+let actx = null, muted = false;
+function audio(){
+  if (!actx){ const A = window.AudioContext || window.webkitAudioContext; if (!A) return null; actx = new A(); }
+  if (actx.state === "suspended") actx.resume();
+  return actx;
+}
+function tone({freq=440, type="sine", start=0, dur=.15, vol=.2, slideTo=null}){
+  if (muted) return; const c = audio(); if (!c) return;
+  const t = c.currentTime + start, o = c.createOscillator(), g = c.createGain();
+  o.type = type; o.frequency.setValueAtTime(freq, t);
+  if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
+  g.gain.setValueAtTime(.0001, t);
+  g.gain.exponentialRampToValueAtTime(vol, t + .012);
+  g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  o.connect(g).connect(c.destination); o.start(t); o.stop(t + dur + .05);
+}
+function noiseBurst({dur=.4, from=300, to=4000, vol=.18}){
+  if (muted) return; const c = audio(); if (!c) return;
+  const len = Math.floor(c.sampleRate * dur), buf = c.createBuffer(1, len, c.sampleRate), d = buf.getChannelData(0);
+  for (let i=0;i<len;i++) d[i] = Math.random()*2-1;
+  const src = c.createBufferSource(); src.buffer = buf;
+  const f = c.createBiquadFilter(); f.type = "bandpass"; f.Q.value = 1.4;
+  const t = c.currentTime;
+  f.frequency.setValueAtTime(from, t); f.frequency.exponentialRampToValueAtTime(to, t + dur);
+  const g = c.createGain();
+  g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + dur*.35); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  src.connect(f).connect(g).connect(c.destination); src.start(t);
+}
+const sfx = {
+  pop(p=0){ const base = 620 + p*140;
+    tone({freq:base, slideTo:base*1.9, type:"sine", dur:.13, vol:.28});
+    tone({freq:base*2, type:"triangle", start:.03, dur:.09, vol:.1}); },
+  whoosh(){ noiseBurst({dur:.38, from:250, to:3800, vol:.2}); },
+  hover(){ tone({freq:900, slideTo:1100, type:"sine", dur:.04, vol:.04}); },
+  combo(n){ tone({freq:520+n*60, slideTo:900+n*60, type:"square", dur:.1, vol:.07}); },
+  rise(sec=3.5){
+    if (muted) return; const c = audio(); if (!c) return;
+    const t = c.currentTime, o = c.createOscillator(), g = c.createGain(), f = c.createBiquadFilter();
+    o.type = "sawtooth"; f.type = "lowpass"; f.Q.value = 6;
+    o.frequency.setValueAtTime(110, t); o.frequency.exponentialRampToValueAtTime(880, t + sec);
+    f.frequency.setValueAtTime(300, t); f.frequency.exponentialRampToValueAtTime(5000, t + sec);
+    g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.09, t + sec*.9); g.gain.exponentialRampToValueAtTime(.0001, t + sec + .1);
+    o.connect(f).connect(g).connect(c.destination); o.start(t); o.stop(t + sec + .2);
+    const lfo = c.createOscillator(), lg = c.createGain(); lfo.frequency.setValueAtTime(6, t); lfo.frequency.linearRampToValueAtTime(22, t + sec);
+    lg.gain.value = 40; lfo.connect(lg).connect(o.frequency); lfo.start(t); lfo.stop(t + sec + .2);
+  },
+  tick(){ tone({freq:1300, type:"square", dur:.03, vol:.05}); },
+  fanfare(){
+    const seq = [523.25, 659.25, 783.99, 1046.5];
+    seq.forEach((n,i)=> tone({freq:n, type:"square", start:i*.12, dur:.14, vol:.15}));
+    [783.99, 1046.5, 1318.5].forEach(n => tone({freq:n, type:"square", start:.55, dur:.75, vol:.11}));
+    [392, 523.25].forEach(n => tone({freq:n, type:"triangle", start:.55, dur:.75, vol:.16}));
+    tone({freq:2093, type:"sine", start:.7, dur:.6, vol:.06});
+  }
+};
+
+/* =========================================================
+   ÉTAT
+   ========================================================= */
+let current = 0, answers = [], locked = false, combo = 0, maxCombo = 0, lastPct = 0, lastTier = null, lastStats = null;
+
+/* =========================================================
+   TRANSITIONS D'ÉCRAN
+   ========================================================= */
+function show(id, silent){
+  const cur = document.querySelector(".screen.active"), next = $(id);
+  if (!silent) sfx.whoosh();
+  $("actionBar").classList.remove("on");
+  const enter = () => {
+    next.classList.add("active","enter");
+    setTimeout(() => next.classList.remove("enter"), 520);
+    window.scrollTo({top:0, behavior:"smooth"});
+  };
+  if (cur && cur !== next){
+    cur.classList.add("leave");
+    setTimeout(() => { cur.classList.remove("active","leave"); enter(); }, 250);
+  } else enter();
+}
+
+/* =========================================================
+   MUTE
+   ========================================================= */
+$("muteBtn").addEventListener("click", () => {
+  muted = !muted;
+  $("muteBtn").textContent = muted ? "🔇" : "🔊";
+  if (!muted) { audio(); sfx.pop(1); }
+});
+
+/* =========================================================
+   QUIZ
+   ========================================================= */
+function setProgress(done){
+  const pct = Math.round(done / QUESTIONS.length * 100);
+  const bar = $("progressBar");
+  bar.style.width = pct + "%";
+  const hue = 340 - pct * 2.1;
+  bar.style.backgroundColor = "hsl(" + hue + " 95% 58%)";
+  bar.style.boxShadow = "0 0 " + (8 + pct/5) + "px hsl(" + hue + " 100% 60%)";
+}
+
+function startQuiz(){
+  audio();
+  current = 0; answers = []; combo = 0; maxCombo = 0; locked = false;
+  $("progressWrap").classList.add("on");
+  $("comboChip").style.display = "none";
+  setProgress(0);
+  renderQuestion();
+  show("quiz");
+}
+
+function renderQuestion(){
+  const q = QUESTIONS[current];
+  const opts = shuffle(q.a.map((x,i) => ({...x, i})));
+  const letters = ["A","B","C","D"];
+  $("qCount").textContent = (current+1) + "/" + QUESTIONS.length;
+  const card = $("qCard");
+  card.classList.remove("qcard-in"); void card.offsetWidth; card.classList.add("qcard-in");
+  card.innerHTML =
+    '<div class="flex items-start gap-3 mb-5">' +
+      '<div class="text-5xl bob" style="animation-duration:3s">' + q.emoji + '</div>' +
+      '<h2 class="display text-xl sm:text-2xl leading-snug pt-1">' + q.q + '</h2>' +
+    '</div>' +
+    '<div class="space-y-4" id="opts">' +
+      opts.map((o,idx) =>
+        '<button class="answer" data-idx="' + idx + '">' +
+          '<span class="letter">' + letters[idx] + '</span><span>' + o.t + '</span>' +
+        '</button>').join("") +
+    '</div>';
+  card._opts = opts;
+  card.querySelectorAll(".answer").forEach(btn => {
+    btn.addEventListener("click", (e) => choose(Number(btn.dataset.idx), e));
+    btn.addEventListener("mouseenter", () => sfx.hover());
+  });
+  locked = false;
+}
+
+function choose(idx, evt){
+  if (locked) return; locked = true;
+  const card = $("qCard"), opt = card._opts[idx], q = QUESTIONS[current];
+  const btns = card.querySelectorAll(".answer");
+  btns.forEach((b,i) => { b.classList.add("locked"); b.classList.add(i === idx ? "picked" : "dim"); });
+  const tag = document.createElement("span"); tag.className = "tag"; tag.textContent = TAGS[opt.p];
+  btns[idx].appendChild(tag);
+
+  answers.push({ stat:q.stat, p:opt.p });
+  sfx.pop(opt.p);
+
+  if (opt.p >= 2){ combo++; maxCombo = Math.max(maxCombo, combo); if (combo >= 2) setTimeout(() => sfx.combo(combo), 120); }
+  else combo = 0;
+  updateCombo();
+
+  let x, y;
+  const r = btns[idx].getBoundingClientRect();
+  if (evt && typeof evt.clientX === "number" && evt.clientX > 0){ x = evt.clientX; y = evt.clientY; }
+  else { x = r.left + r.width/2; y = r.top + r.height/2; }
+  floatReaction(opt.r, x, y, opt.p);
+  if (opt.p === 3) floatReaction("Niveau boss final !", window.innerWidth/2, 120, 4, true);
+
+  current++;
+  setProgress(current);
+  setTimeout(() => {
+    if (current < QUESTIONS.length){ sfx.whoosh(); renderQuestion(); window.scrollTo({top:0, behavior:"smooth"}); }
+    else runAnalysis();
+  }, 850);
+}
+
+function updateCombo(){
+  const chip = $("comboChip");
+  if (combo >= 2){
+    chip.style.display = "inline-flex";
+    $("comboNum").textContent = "x" + combo;
+    chip.animate([{transform:"scale(1.4) rotate(-6deg)"},{transform:"scale(1) rotate(0)"}], {duration:300, easing:"cubic-bezier(.3,1.6,.5,1)"});
+  } else chip.style.display = "none";
+}
+
+function floatReaction(text, x, y, p, big){
+  const colors = ["#4D96FF","#FFD93D","#FF9F45","#FF6FA8","#A66BFF"];
+  const el = document.createElement("div");
+  el.className = "floaty";
+  el.textContent = text;
+  el.style.left = Math.min(Math.max(x, 90), window.innerWidth - 90) + "px";
+  el.style.top = y + "px";
+  el.style.background = colors[p % colors.length];
+  el.style.color = "#111";
+  el.style.setProperty("--r", (Math.random()*14 - 7).toFixed(1) + "deg");
+  if (big){ el.style.fontSize = "1.15rem"; el.style.background = "#A66BFF"; el.style.color = "#fff"; }
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1600);
+}
+
+/* =========================================================
+   FAUX ÉCRAN D'ANALYSE (3,5 s)
+   ========================================================= */
+const LOAD_MSGS = [
+  "Analyse du nombre d'onglets ouverts…",
+  "Calibrage de la tolérance aux petites cuillères…",
+  "Calcul du taux d'évitement des appels téléphoniques…",
+  "Mesure de la pertinence du volume pair…",
+  "Détection des étiquettes de t-shirt fantômes…",
+  "Compilation des hyperfixations de 2019 à aujourd'hui…"
+];
+function runAnalysis(){
+  $("progressWrap").classList.remove("on");
+  $("comboChip").style.display = "none";
+  show("loading");
+  const DURATION = 3500;
+  setTimeout(() => sfx.rise(3.5), 300);
+  const start = performance.now() + 350;
+  let msgI = -1;
+  const msgEl = $("loadMsg");
+  const loop = (now) => {
+    const t = Math.max(0, Math.min(1, (now - start) / DURATION));
+    const eased = t < .5 ? 2*t*t : 1 - Math.pow(-2*t + 2, 2)/2;
+    const pct = Math.round(eased * 100);
+    $("gauge").style.width = pct + "%";
+    $("loadPct").textContent = pct + "%";
+    const mi = Math.min(LOAD_MSGS.length - 1, Math.floor(t * LOAD_MSGS.length));
+    if (mi !== msgI){ msgI = mi; msgEl.textContent = LOAD_MSGS[mi]; msgEl.animate([{opacity:0, transform:"translateY(10px)"},{opacity:1, transform:"none"}], {duration:220}); }
+    if (t < 1) requestAnimationFrame(loop);
+    else setTimeout(showResult, 250);
+  };
+  requestAnimationFrame(loop);
+}
+
+/* =========================================================
+   RÉSULTAT
+   ========================================================= */
+function computeResults(){
+  const total = answers.reduce((s,a) => s + a.p, 0);
+  const pct = Math.round(total / (QUESTIONS.length * 3) * 100);
+  const stats = STATS.map(s => {
+    const mine = answers.filter(a => a.stat === s.key), sum = mine.reduce((x,a) => x + a.p, 0);
+    return { ...s, pct: Math.round(sum / (mine.length * 3) * 100) };
+  });
+  const tier = TIERS.find(t => pct <= t.max) || TIERS[TIERS.length-1];
+  return { pct, stats, tier };
+}
+
+function showResult(){
+  const { pct, stats, tier } = computeResults();
+  lastPct = pct; lastTier = tier; lastStats = stats;
+
+  $("bigPct").textContent = "0%";
+  $("rankEmoji").textContent = tier.emoji;
+  $("rankTitle").textContent = tier.title;
+  $("rankBox").style.background = tier.color;
+  $("rankDesc").textContent = tier.desc;
+  $("comboRes").textContent = "🔥 Meilleur combo de sincérité : x" + maxCombo;
+
+  $("stats").innerHTML = stats.map(s =>
+    '<div class="wiggle">' +
+      '<div class="flex items-baseline justify-between gap-2 mb-1">' +
+        '<span class="font-bold text-sm sm:text-base">' + s.emoji + ' ' + s.label + '</span>' +
+        '<span class="display text-lg" data-statpct="' + s.key + '">0%</span>' +
+      '</div>' +
+      '<div class="statbar"><div class="statfill" data-fill="' + s.key + '" style="background-color:' + s.color + '"></div></div>' +
+    '</div>').join("");
+
+  show("result", true);
+  setTimeout(() => $("actionBar").classList.add("on"), 400);
+  sfx.fanfare();
+  launchConfetti();
+
+  const dur = 2400, t0 = performance.now();
+  let lastTick = 0;
+  const step = (now) => {
+    const t = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - t, 4);
+    const v = Math.round(pct * e);
+    $("bigPct").textContent = v + "%";
+    if (v - lastTick >= 4){ lastTick = v; sfx.tick(); }
+    if (t < 1) requestAnimationFrame(step);
+    else { $("bigPct").animate([{transform:"scale(1.18)"},{transform:"scale(1)"}], {duration:400, easing:"cubic-bezier(.3,1.6,.5,1)"}); }
+  };
+  requestAnimationFrame(step);
+
+  stats.forEach((s, i) => {
+    setTimeout(() => {
+      const f = document.querySelector('[data-fill="' + s.key + '"]');
+      f.classList.toggle("zero", s.pct === 0);
+      f.style.width = s.pct + "%";
+      const label = document.querySelector('[data-statpct="' + s.key + '"]');
+      const t0s = performance.now();
+      const run = (now) => { const t = Math.min(1,(now - t0s)/1400), e = 1 - Math.pow(1 - t, 3); label.textContent = Math.round(s.pct * e) + "%"; if (t < 1) requestAnimationFrame(run); };
+      requestAnimationFrame(run);
+      sfx.pop(i);
+    }, 700 + i * 350);
+  });
+}
+
+function launchConfetti(){
+  if (typeof confetti !== "function") return;
+  const colors = ["#FF6FA8","#FFD93D","#4D96FF","#5FD38D","#A66BFF","#FF9F45"];
+  confetti({ particleCount:140, spread:100, origin:{ y:.55 }, colors });
+  const end = Date.now() + 2000;
+  (function frame(){
+    confetti({ particleCount:5, angle:60,  spread:60, origin:{ x:0, y:.7 }, colors });
+    confetti({ particleCount:5, angle:120, spread:60, origin:{ x:1, y:.7 }, colors });
+    if (Date.now() < end) requestAnimationFrame(frame);
+  })();
+}
+
+/* =========================================================
+   COPIER LE SCORE
+   ========================================================= */
+function bar(p){ const n = Math.round(p / 10); return "█".repeat(n) + "░".repeat(10 - n); }
+function buildSummary(){
+  const lines = [
+    "🧠 J'ai fait le test, je suis autiste à " + lastPct + "% (" + lastTier.title + ") " + lastTier.emoji,
+    "",
+    ...lastStats.map(s => s.emoji + " " + s.label + "\n" + bar(s.pct) + " " + s.pct + "%"),
+    "",
+    "🔥 Meilleur combo de sincérité : x" + maxCombo,
+    "",
+    "Et toi, t'es à combien ? 👀"
+  ];
+  return lines.join("\n");
+}
+async function copyText(text){
+  try { await navigator.clipboard.writeText(text); return true; }
+  catch (e) {
+    const ta = document.createElement("textarea");
+    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    let ok = false; try { ok = document.execCommand("copy"); } catch (_) {}
+    ta.remove(); return ok;
+  }
+}
+let toastT;
+async function copyResult(){
+  const ok = await copyText(buildSummary());
+  const t = $("toast");
+  t.textContent = ok ? "Copié ! ✅" : "Impossible de copier 😕";
+  t.classList.add("on"); sfx.pop(3);
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("on"), 1900);
+  if (ok && typeof confetti === "function") confetti({ particleCount:40, spread:60, origin:{ y:.85 } });
+}
+
+/* =========================================================
+   INIT & ÉVÉNEMENTS
+   ========================================================= */
+$("startBtn").addEventListener("click", startQuiz);
+$("copyBtn").addEventListener("click", copyResult);
+$("replayBtn").addEventListener("click", () => { audio(); sfx.pop(2); show("intro"); });
+
+document.addEventListener("keydown", (e) => {
+  if (!$("quiz").classList.contains("active") || locked) return;
+  const n = parseInt(e.key, 10);
+  if (n >= 1 && n <= 4){
+    const btn = document.querySelectorAll("#qCard .answer")[n-1];
+    if (btn) btn.click();
+  }
+});
+
+const cur = $("cursor");
+window.addEventListener("mousemove", (e) => { cur.style.transform = "translate(" + e.clientX + "px," + e.clientY + "px)"; });
+document.addEventListener("mouseover", (e) => { cur.classList.toggle("big", !!e.target.closest("button")); });
+</script>
+</body>
+</html>
