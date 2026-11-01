@@ -53,16 +53,7 @@
   .answer:hover{transform:translate(-2px,-2px) rotate(-.8deg);box-shadow:7px 7px 0 var(--ink);background:#FFFBEA}
   .answer:hover .letter{transform:rotate(-10deg) scale(1.1)}
   .answer:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--ink)}
-  .answer.locked{pointer-events:none}
-  .answer.picked{background:var(--green);animation:pickpop .45s cubic-bezier(.3,1.6,.5,1)}
-  .answer.dim{opacity:.45;transform:scale(.98)}
-  .answer .tag{
-    position:absolute;right:-6px;top:-14px;background:var(--ink);color:#fff;font-size:.7rem;
-    padding:.15rem .55rem;border-radius:999px;transform:rotate(4deg);font-weight:700;
-    animation:tagin .35s cubic-bezier(.3,1.6,.5,1);
-  }
-  @keyframes pickpop{0%{transform:scale(1)}40%{transform:scale(1.04) rotate(1deg)}100%{transform:scale(1)}}
-  @keyframes tagin{from{transform:scale(0) rotate(-20deg)}to{transform:scale(1) rotate(4deg)}}
+  .picked{background:var(--green) !important}
 
   /* ---------- Screens ---------- */
   .screen{display:none}
@@ -73,6 +64,8 @@
   @keyframes leave{to{opacity:0;transform:translateX(-40px) scale(.96) rotate(-2deg)}}
   .qcard-in{animation:qin .45s cubic-bezier(.2,1.2,.4,1)}
   @keyframes qin{from{opacity:0;transform:translateX(50px) rotate(2deg)}to{opacity:1;transform:none}}
+  .shake{animation:shake .35s}
+  @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px) rotate(-3deg)}40%{transform:translateX(8px) rotate(3deg)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
 
   /* ---------- Progress ---------- */
   #progressWrap{
@@ -88,18 +81,60 @@
   }
   @keyframes stripes{to{background-position:28px 0}}
 
-  /* ---------- Floating reactions ---------- */
-  .floaty{
-    position:fixed;z-index:80;pointer-events:none;font-weight:700;white-space:nowrap;
-    padding:.35rem .8rem;border:3px solid var(--ink);border-radius:999px;box-shadow:3px 3px 0 var(--ink);
-    animation:floatup 1.5s cubic-bezier(.2,.8,.3,1) forwards;font-size:.95rem;
-  }
-  @keyframes floatup{
-    0%{opacity:0;transform:translate(-50%,10px) scale(.4) rotate(var(--r,0deg))}
-    15%{opacity:1;transform:translate(-50%,-10px) scale(1.15) rotate(var(--r,0deg))}
-    70%{opacity:1}
-    100%{opacity:0;transform:translate(-50%,-90px) scale(1) rotate(var(--r,0deg))}
-  }
+  /* ---------- Timer ---------- */
+  .statbar{height:22px;background:#fff;border:3px solid var(--ink);border-radius:999px;overflow:hidden}
+  .tfill{height:100%;width:100%;border-right:3px solid var(--ink);background-color:var(--green);
+    background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.3) 0 8px,transparent 8px 16px)}
+
+  /* ---------- Épreuve 1 : slider ---------- */
+  .vol{-webkit-appearance:none;appearance:none;width:100%;height:46px;background:transparent;--p:20%;margin-top:.6rem;outline:none}
+  .vol::-webkit-slider-runnable-track{height:28px;border:3px solid #111;border-radius:999px;background:linear-gradient(to right,var(--pink) var(--p),#fff var(--p))}
+  .vol::-webkit-slider-thumb{-webkit-appearance:none;width:42px;height:42px;margin-top:-4px;border-radius:50%;background:var(--yellow);border:3px solid #111;box-shadow:3px 3px 0 #111;cursor:grab}
+  .vol::-moz-range-track{height:28px;border:3px solid #111;border-radius:999px;background:linear-gradient(to right,var(--pink) var(--p),#fff var(--p))}
+  .vol::-moz-range-thumb{width:36px;height:36px;border-radius:50%;background:var(--yellow);border:3px solid #111;box-shadow:3px 3px 0 #111;cursor:grab}
+
+  /* ---------- Épreuve 2 : grille ---------- */
+  .sqgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;max-width:340px;margin:0 auto}
+  .sq{aspect-ratio:1;border:3px solid var(--ink);border-radius:6px;cursor:pointer;padding:0}
+  .sq.hint{outline:4px dashed #111;outline-offset:3px}
+
+  /* ---------- Épreuve 3 : cuillères ---------- */
+  .spoon{background:#fff;border:3px solid var(--ink);border-radius:16px;box-shadow:4px 4px 0 var(--ink);padding:.6rem;cursor:pointer;
+    font-family:inherit;font-weight:700;color:var(--ink);transition:transform .12s, box-shadow .12s, background .2s}
+  .spoon:hover{transform:translate(-2px,-2px) rotate(-1.5deg);box-shadow:7px 7px 0 var(--ink);background:#FFFBEA}
+  .spoon:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--ink)}
+  .spoon svg{width:100%;height:150px}
+
+  /* ---------- Épreuve 4 : suite ---------- */
+  .chip{min-width:3.2rem;height:3.2rem;padding:0 .6rem;display:grid;place-items:center;border:3px solid var(--ink);border-radius:12px;
+    background:var(--yellow);font-weight:700;font-size:1.4rem;box-shadow:3px 3px 0 var(--ink)}
+  .chip.q{background:var(--pink);color:#fff;animation:bob 1.6s ease-in-out infinite}
+
+  /* ---------- Épreuve 5 : trottoir ---------- */
+  .road{position:relative;height:84px;border:3px solid var(--ink);border-radius:14px;overflow:hidden;
+    background:repeating-linear-gradient(90deg,#EFE6C8 0 24px,#E2D8B3 24px 48px)}
+  .walker{position:absolute;left:6px;bottom:8px;font-size:2.4rem;transition:left 15s linear}
+  .you{position:absolute;right:10px;bottom:8px;font-size:2.4rem}
+  .distlab{position:absolute;left:50%;top:6px;transform:translateX(-50%);font-weight:700;background:#fff;border:3px solid var(--ink);border-radius:999px;padding:0 .7rem}
+
+  /* ---------- Épreuve 6 : blocs ---------- */
+  .blk{border:3px solid var(--ink);border-radius:10px;box-shadow:4px 4px 0 var(--ink);cursor:pointer;padding:0;font-family:'Bagel Fat One',system-ui;font-size:1.6rem;color:var(--ink);
+    transition:transform .12s, box-shadow .12s, opacity .2s}
+  .blk:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--ink)}
+  .blk:disabled{opacity:.55;cursor:default;box-shadow:none}
+
+  /* ---------- Épreuve 7 : mémoire ---------- */
+  .slot{width:3.4rem;height:4.2rem;display:grid;place-items:center;border:3px solid var(--ink);border-radius:12px;background:#fff;
+    font-family:'Bagel Fat One',system-ui;font-size:2.4rem;box-shadow:3px 3px 0 var(--ink)}
+  .keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;max-width:300px;margin:1rem auto 0}
+  .key{padding:.8rem 0;font-size:1.5rem}
+
+  /* ---------- Feedback plein écran ---------- */
+  #fb{position:fixed;inset:0;z-index:120;display:none;align-items:center;justify-content:center;padding:1rem;
+    background:rgba(255,241,201,.85);backdrop-filter:blur(3px);cursor:pointer}
+  #fb.on{display:flex}
+  #fbCard{max-width:30rem;width:100%;text-align:center;padding:1.5rem 1.2rem;animation:fbpop .45s cubic-bezier(.2,1.6,.4,1)}
+  @keyframes fbpop{from{transform:scale(.3) rotate(-8deg);opacity:0}to{transform:none;opacity:1}}
 
   /* ---------- Loading ---------- */
   #gauge{
@@ -122,7 +157,6 @@
   @keyframes blip{0%,100%{transform:scale(.6);opacity:.4}50%{transform:scale(1.2);opacity:1}}
 
   /* ---------- Result ---------- */
-  .statbar{height:22px;background:#fff;border:3px solid var(--ink);border-radius:999px;overflow:hidden}
   .statfill{height:100%;width:0%;border-right:3px solid var(--ink);transition:width 1.4s cubic-bezier(.2,1,.3,1);
     background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.3) 0 8px,transparent 8px 16px);}
   .statfill.zero{border-right:none}
@@ -186,13 +220,16 @@
 <!-- progression -->
 <div id="progressWrap"><div id="progressBar"></div></div>
 
-<!-- bouton mute (emoji natif, zéro librairie) -->
+<!-- bouton mute -->
 <button id="muteBtn" class="btn" aria-label="Couper ou activer le son" style="position:fixed;right:14px;top:30px;z-index:60;width:50px;height:50px;border-radius:14px;background:#fff;padding:0;font-size:1.5rem;line-height:1">🔊</button>
 
-<!-- combo -->
-<div id="comboChip" class="btn" style="position:fixed;left:14px;top:30px;z-index:60;padding:.4rem .8rem;background:var(--purple);color:#fff;display:none;pointer-events:none">
-  🔥 Combo de sincérité <span id="comboNum" class="display" style="margin-left:.2rem">x0</span>
+<!-- compteur en direct -->
+<div id="meterChip" class="btn" style="position:fixed;left:14px;top:30px;z-index:60;padding:.4rem .8rem;background:var(--purple);color:#fff;display:none;pointer-events:none">
+  🧠 <span id="meterNum" class="display">0%</span>
 </div>
+
+<!-- feedback plein écran -->
+<div id="fb"><div id="fbCard" class="card"></div></div>
 
 <main class="relative z-10 mx-auto w-full max-w-xl px-4 pt-24 pb-16">
 
@@ -200,21 +237,26 @@
   <section id="intro" class="screen active">
     <div class="card p-6 sm:p-8 text-center">
       <div class="bob text-7xl mb-2 inline-block">🧠</div>
-      <p class="inline-block px-3 py-1 mb-3 text-xs font-bold border-[3px] border-black rounded-full bg-[#FFD93D] -rotate-2">12 QUESTIONS • 2 MIN • 0% SÉRIEUX</p>
+      <p class="inline-block px-3 py-1 mb-3 text-xs font-bold border-[3px] border-black rounded-full bg-[#FFD93D] -rotate-2">8 ÉPREUVES • 5 MIN • 0% SÉRIEUX</p>
       <h1 class="display text-4xl sm:text-5xl leading-tight mb-4">Test : À quel <span class="inline-block px-2 border-[3px] border-black bg-[#FF6FA8] text-white -rotate-2 rounded-lg">%</span> es-tu autiste&nbsp;?</h1>
-      <p class="text-lg font-bold mb-6">Le test ultime (et 0% scientifique) pour évaluer tes petites manies et tes hyperfixations entre potes.</p>
+      <p class="text-lg font-bold mb-4">Le test ultime (et 0% scientifique) pour évaluer tes petites manies et tes hyperfixations entre potes.</p>
+      <p class="text-3xl mb-6 tracking-widest">🔊 👁️ 🥄 🧩 🚶 📊 🔢 📚</p>
       <button id="startBtn" class="btn display text-2xl px-8 py-4 w-full sm:w-auto bg-[#5FD38D]">🚀 Lancer le test</button>
-      <p class="mt-5 text-xs opacity-70">C'est pour rigoler, ce n'est pas un test médical et ça ne remplace aucun diagnostic. Réponds avec sincérité, et sans te prendre la tête. 💛</p>
+      <p class="mt-5 text-xs opacity-70">Mini-jeux, réflexes, logique, mises en situation : sois rapide et sincère. C'est pour rigoler, ce n'est pas un test médical et ça ne remplace aucun diagnostic. 💛</p>
     </div>
   </section>
 
-  <!-- ========== QUIZ ========== -->
-  <section id="quiz" class="screen">
-    <div class="flex items-center justify-between mb-3 mt-2">
-      <span id="qCount" class="display text-lg px-3 py-1 bg-white border-[3px] border-black rounded-xl shadow-[3px_3px_0_#111]">1/12</span>
-      <span class="text-xs font-bold opacity-70">Astuce : touches 1 à 4 ⌨️</span>
+  <!-- ========== ÉPREUVES ========== -->
+  <section id="play" class="screen">
+    <div class="flex items-center justify-between gap-2 mb-3 mt-2">
+      <span id="epStep" class="display text-base sm:text-lg px-3 py-1 bg-white border-[3px] border-black rounded-xl shadow-[3px_3px_0_#111]">ÉPREUVE 1/8</span>
+      <span id="epBadge" class="text-xs sm:text-sm font-bold px-3 py-1 bg-[#FFD93D] border-[3px] border-black rounded-full rotate-2">🎮 MINI-JEU</span>
     </div>
-    <div id="qCard" class="card p-5 sm:p-7"></div>
+    <div id="epCard" class="card p-5 sm:p-7">
+      <h2 id="epTitle" class="display text-2xl sm:text-3xl leading-tight mb-2"></h2>
+      <p id="epInstr" class="font-bold text-base sm:text-lg mb-5"></p>
+      <div id="epBody"></div>
+    </div>
   </section>
 
   <!-- ========== CHARGEMENT ========== -->
@@ -243,7 +285,7 @@
 
       <div id="stats" class="space-y-4 text-left mt-6 pt-5 border-t-[3px] border-dashed border-black"></div>
 
-      <p id="comboRes" class="mt-5 text-sm font-bold opacity-70"></p>
+      <p id="bestRes" class="mt-5 text-sm font-bold opacity-70"></p>
     </div>
     <p class="text-center text-xs mt-6 opacity-70">Quiz pour rire : aucune valeur de diagnostic. Tu es très bien comme tu es. 💛</p>
     <div style="height:110px"></div>
@@ -260,120 +302,13 @@
 
 <script>
 /* =========================================================
-   DONNÉES
-   ========================================================= */
-const TAGS = ["PNJ certifié", "Petite manie", "Ça sent le vécu", "Niveau boss final"];
-
-const STATS = [
-  { key:"hyperfocus", label:"Hyperfixation Wikipédia",        emoji:"🧠", color:"#FF6FA8" },
-  { key:"details",    label:"Intolérance aux bruits / détails", emoji:"🔊", color:"#4D96FF" },
-  { key:"social",     label:"Batterie sociale en PLS",         emoji:"🔋", color:"#FFD93D" },
-  { key:"logic",      label:"Rigidité des habitudes",          emoji:"📐", color:"#5FD38D" }
-];
-
-const QUESTIONS = [
-  { stat:"logic", emoji:"🔊", q:"Le volume de la télé ou de la voiture, c'est quoi ton délire ?",
-    a:[
-      { t:"Je mets au pif tant que j'entends, je regarde même pas le chiffre.", p:0, r:"Mode zen 😌" },
-      { t:"J'ai un chiffre préféré, mais si je tombe à côté c'est pas grave.", p:1, r:"Préférence soft 🙂" },
-      { t:"Faut que ça tombe sur un multiple de 5 ou un chiffre pair, sinon je supporte pas.", p:2, r:"Alerte manie détectée 🚨" },
-      { t:"Volume 17 ? Jamais. Je monte, je descends, je remets à 20, et là seulement je peux vivre.", p:3, r:"+25% Rigidité 📊" }
-    ]},
-  { stat:"hyperfocus", emoji:"🍝", q:"Ton « repas de sécurité » (celui qui te déçoit jamais) :",
-    a:[
-      { t:"Ça existe pas chez moi, je mange ce qui passe.", p:0, r:"Esprit libre 🦋" },
-      { t:"J'ai un plat préféré, mais 3 jours de suite max.", p:1, r:"Fidélité modérée 🍕" },
-      { t:"Je peux le manger toute la semaine sans me plaindre.", p:2, r:"+15% Routine sacrée 🍽️" },
-      { t:"14 jours d'affilée, même assiette, même sauce, et le 15e jour j'en veux encore.", p:3, r:"Contrat à vie signé 📜" }
-    ]},
-  { stat:"hyperfocus", emoji:"📚", q:"Il est 2h du mat'. Pourquoi t'as 47 onglets Wikipédia ouverts ?",
-    a:[
-      { t:"Je dors à 2h du mat', comme une personne normale.", p:0, r:"Sommeil réparateur 😴" },
-      { t:"J'ai lu un article ou deux, puis j'ai fermé.", p:1, r:"Curiosité raisonnable 📖" },
-      { t:"J'étais parti sur les dauphins, je suis maintenant sur l'histoire des phares.", p:2, r:"+20% Spirale Wikipédia 🌀" },
-      { t:"47 onglets sur un sujet ultra obscur, genre les ponts-levis suédois, et j'ai des avis.", p:3, r:"+30% Hyperfocus ! 🚀" }
-    ]},
-  { stat:"social", emoji:"📞", q:"Tu dois passer un coup de fil (rdv chez le médecin, par exemple).",
-    a:[
-      { t:"J'appelle, je parle, je raccroche. Easy.", p:0, r:"Aucune angoisse ☎️" },
-      { t:"Je souffle un coup, 5 min de prépa max.", p:1, r:"Petit stress sain 😅" },
-      { t:"J'écris ce que je vais dire, je repousse à demain, puis à après-demain.", p:2, r:"Batterie sociale : -10% 🔋" },
-      { t:"Je rejoue l'appel 3h dans ma tête avec toutes les variantes… puis je prends rdv en ligne.", p:3, r:"Simulation x1000 en cours 🎬" }
-    ]},
-  { stat:"details", emoji:"🥄", q:"Tu tombes sur une cuillère à la forme chelou.",
-    a:[
-      { t:"Une cuillère c'est une cuillère.", p:0, r:"Philosophie zen 🧘" },
-      { t:"Je remarque, je lève un sourcil, je mange quand même.", p:1, r:"Sourcil activé 🤨" },
-      { t:"Je vais chercher une autre cuillère. Celle-là, non.", p:2, r:"Tolérance cuillère : 3% 🥄" },
-      { t:"Mon repas est gâché. Je sais exactement à quoi ressemble la cuillère parfaite et c'est pas ça.", p:3, r:"+25% Cuillérologue 🔬" }
-    ]},
-  { stat:"details", emoji:"👕", q:"L'étiquette de ton t-shirt te gratte dans le cou.",
-    a:[
-      { t:"Quelle étiquette ?", p:0, r:"Peau de dragon 🐉" },
-      { t:"Ça me saoule un peu, je finis par la couper.", p:1, r:"Ciseaux en vue ✂️" },
-      { t:"Je coupe toutes les étiquettes de tous mes vêtements dès que je les achète.", p:2, r:"Protocole étiquette 🧵" },
-      { t:"Je pense plus qu'à ça. Même coupée, je la sens encore. L'étiquette fantôme.", p:3, r:"+20% Sensibilité max 👻" }
-    ]},
-  { stat:"social", emoji:"🚶", q:"Tu croises de loin quelqu'un que tu connais à peine, dans la rue.",
-    a:[
-      { t:"Je vais lui dire bonjour et on papote deux minutes.", p:0, r:"Papillon social 🦋" },
-      { t:"Petit coucou de la main sans m'arrêter.", p:1, r:"Salut tactique 👋" },
-      { t:"Je fais semblant d'être au téléphone.", p:2, r:"Mode fantôme activé 📱" },
-      { t:"Je calcule une trajectoire d'évitement digne de la NASA : autre trottoir, détour par la boulangerie, demi-tour.", p:3, r:"Trajectoire validée 🛰️" }
-    ]},
-  { stat:"social", emoji:"🔋", q:"Après une soirée de 3h avec des potes que t'adores :",
-    a:[
-      { t:"Je suis chaud pour la suite, on va où ?", p:0, r:"Batterie infinie ⚡" },
-      { t:"Un peu crevé, mais content.", p:1, r:"Batterie : 60% 🔋" },
-      { t:"J'ai besoin d'une journée entière toute seule pour récupérer.", p:2, r:"Batterie sociale : -40% 🪫" },
-      { t:"Batterie à 0%. Je disparais sous ma couette, 14 messages non lus que je lirai jeudi.", p:3, r:"Batterie sociale : -90% 🪫" }
-    ]},
-  { stat:"hyperfocus", emoji:"🎧", q:"Tu découvres une chanson qui te fait vibrer.",
-    a:[
-      { t:"Je l'écoute, puis je passe à autre chose.", p:0, r:"Léger comme l'air 🎈" },
-      { t:"Je l'ajoute à une playlist.", p:1, r:"Playlist enrichie 🎶" },
-      { t:"Je l'écoute 30 fois d'affilée, puis tout l'album.", p:2, r:"+20% Boucle infinie 🔁" },
-      { t:"Pendant 3 semaines, c'est la seule musique qui existe. J'ai lu la page Wikipédia du groupe, de l'ingé son et du studio.", p:3, r:"+30% Hyperfocus ! 🎸" }
-    ]},
-  { stat:"logic", emoji:"🍽️", q:"Quand tu charges le lave-vaisselle (ou que tu ranges un placard) :",
-    a:[
-      { t:"Je mets ce qui rentre, ça ira.", p:0, r:"Chaos assumé 🌪️" },
-      { t:"J'ai ma petite méthode, mais je dis rien si quelqu'un d'autre le fait.", p:1, r:"Diplomatie interne 🤝" },
-      { t:"Y a une façon logique de faire et je corrige en douce.", p:2, r:"Correction furtive 🥷" },
-      { t:"Y a un système optimal. J'ai des schémas en tête et je pourrais faire une thèse sur l'angle des assiettes.", p:3, r:"+25% Ingénierie vaisselle 📐" }
-    ]},
-  { stat:"details", emoji:"👀", q:"Tu entres dans une pièce. Tu remarques quoi en premier ?",
-    a:[
-      { t:"Les gens, l'ambiance générale.", p:0, r:"Vision d'ensemble 🖼️" },
-      { t:"Le truc qui détonne, genre un tableau de travers.", p:1, r:"Œil de lynx 🐱" },
-      { t:"Le bourdonnement du néon et la faute d'orthographe sur l'affiche.", p:2, r:"+20% Détecteur de fautes 🚩" },
-      { t:"Le néon, la faute, le tableau, le carrelage, et la plante qui a bougé depuis hier.", p:3, r:"Scan complet de la pièce 📡" }
-    ]},
-  { stat:"logic", emoji:"🧩", q:"Les règles pas écrites du quotidien (qui parle en premier dans l'ascenseur, quand raccrocher…) :",
-    a:[
-      { t:"Je les suis sans me poser de questions.", p:0, r:"Pilote automatique 🚗" },
-      { t:"Parfois je me demande pourquoi on fait ça, puis ça passe.", p:1, r:"Question en passant 💭" },
-      { t:"Je me suis fait mes propres règles pour m'en sortir. Un petit manuel perso.", p:2, r:"Manuel perso chargé 📘" },
-      { t:"J'ai un arbre de décision pour chaque situation sociale, avec plan B et plan C.", p:3, r:"Plan C prêt aussi 🌳" }
-    ]}
-];
-
-const TIERS = [
-  { max:20,  emoji:"🧍", title:"PNJ Certifié Standard", color:"#4D96FF",
-    desc:"Tout glisse chez toi, la vie est fluide. Tu es la preuve vivante que « ça va » existe. On t'envie un peu, pas gêné." },
-  { max:50,  emoji:"🕵️", title:"Suspect mais Discret", color:"#FFD93D",
-    desc:"Quelques manies bien planquées et deux-trois obsessions de salon. Personne se doute de rien… sauf toi, qui sais très bien pour la cuillère." },
-  { max:80,  emoji:"🏛️", title:"Architecte de Wikipédia", color:"#FF6FA8",
-    desc:"Tu construis des cathédrales de savoir inutile à 2h du mat'. Ton cerveau a des onglets ouverts depuis 2019, et c'est ça qui fait ton charme." },
-  { max:100, emoji:"👑", title:"Grand Maître de l'Hyperfocus", color:"#A66BFF",
-    desc:"Quand tu t'intéresses à un sujet, l'univers s'écarte. Tu as des systèmes, des règles et des avis sur tout. Respect éternel, et pense à boire de l'eau." }
-];
-
-/* =========================================================
    OUTILS
    ========================================================= */
 const $ = (id) => document.getElementById(id);
-const shuffle = (arr) => { const a = arr.slice(); for (let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+const rand = (n) => Math.floor(Math.random() * n);
+const pick = (a) => a[rand(a.length)];
+const shuffle = (arr) => { const a = arr.slice(); for (let i=a.length-1;i>0;i--){ const j=rand(i+1); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
 /* =========================================================
    AUDIO (Web Audio API, zéro fichier externe)
@@ -412,7 +347,14 @@ const sfx = {
     tone({freq:base*2, type:"triangle", start:.03, dur:.09, vol:.1}); },
   whoosh(){ noiseBurst({dur:.38, from:250, to:3800, vol:.2}); },
   hover(){ tone({freq:900, slideTo:1100, type:"sine", dur:.04, vol:.04}); },
-  combo(n){ tone({freq:520+n*60, slideTo:900+n*60, type:"square", dur:.1, vol:.07}); },
+  blip(v){ tone({freq:260 + v*7, type:"triangle", dur:.05, vol:.07}); },
+  bonk(){ tone({freq:220, slideTo:90, type:"square", dur:.22, vol:.16}); },
+  win(score){
+    const n = score >= 85 ? 5 : score >= 60 ? 4 : score >= 30 ? 3 : 2;
+    const sc = [523.25, 659.25, 783.99, 1046.5, 1318.5];
+    for (let i=0;i<n;i++) tone({freq:sc[i], type:"square", start:i*.08, dur:.13, vol:.12});
+    tone({freq:sc[n-1]*2, type:"sine", start:n*.08, dur:.25, vol:.07});
+  },
   rise(sec=3.5){
     if (muted) return; const c = audio(); if (!c) return;
     const t = c.currentTime, o = c.createOscillator(), g = c.createGain(), f = c.createBiquadFilter();
@@ -435,9 +377,328 @@ const sfx = {
 };
 
 /* =========================================================
-   ÉTAT
+   MOTEUR D'ÉPREUVES
    ========================================================= */
-let current = 0, answers = [], locked = false, combo = 0, maxCombo = 0, lastPct = 0, lastTier = null, lastStats = null;
+let epToken = 0, epIndex = 0, scores = [], keyHandler = null;
+
+// compte à rebours basé sur requestAnimationFrame, annulé automatiquement à la fin de l'épreuve
+function countdown(ms, onTick, onEnd){
+  const token = epToken, t0 = performance.now();
+  (function loop(now){
+    if (token !== epToken) return;
+    const el = now - t0, left = Math.max(0, ms - el);
+    onTick(left, el);
+    if (left <= 0) onEnd(); else requestAnimationFrame(loop);
+  })(t0);
+}
+function later(fn, ms){ const token = epToken; setTimeout(() => { if (token === epToken) fn(); }, ms); }
+function timerHTML(){
+  return '<div class="flex items-center gap-3 mb-4"><div class="statbar flex-1"><div id="tbar" class="tfill"></div></div><span id="tlabel" class="display text-xl w-16 text-right">0.0s</span></div>';
+}
+function tickBar(left, total){
+  const r = left / total;
+  $("tbar").style.width = (r*100) + "%";
+  $("tbar").style.backgroundColor = "hsl(" + Math.round(r*120) + " 90% 55%)";
+  $("tlabel").textContent = (left/1000).toFixed(1) + "s";
+}
+function answerButtons(items, onPick){
+  const letters = ["A","B","C","D"];
+  return items.map((o,i) =>
+    '<button class="answer pick" data-i="' + i + '"><span class="letter">' + letters[i] + '</span><span>' + o.t + '</span></button>').join("");
+}
+
+/* ---------- ÉPREUVE 1 : le volume ---------- */
+function ep1(body, finish){
+  const start = pick([17, 23]);
+  body.innerHTML =
+    '<div class="text-center">' +
+      '<div id="volIcon" class="text-5xl">🔉</div>' +
+      '<div id="volNum" class="display" style="font-size:clamp(4.5rem,24vw,7rem);line-height:1.1">' + start + '</div>' +
+      '<input id="vol" class="vol" type="range" min="0" max="100" value="' + start + '" aria-label="Volume">' +
+      '<div class="flex justify-center gap-3 mt-3">' +
+        '<button id="volMinus" class="btn px-6 py-2 text-xl bg-white">−1</button>' +
+        '<button id="volPlus" class="btn px-6 py-2 text-xl bg-white">+1</button>' +
+      '</div>' +
+      '<button id="volOk" class="btn display text-2xl px-8 py-3 mt-6 w-full bg-[#5FD38D]">✅ Valider</button>' +
+    '</div>';
+  const r = $("vol");
+  const upd = () => {
+    const v = +r.value;
+    $("volNum").textContent = v;
+    $("volIcon").textContent = v === 0 ? "🔇" : v < 34 ? "🔈" : v < 67 ? "🔉" : "🔊";
+    r.style.setProperty("--p", v + "%");
+    sfx.blip(v);
+  };
+  r.addEventListener("input", upd);
+  r.style.setProperty("--p", start + "%");
+  $("volMinus").onclick = () => { r.value = Math.max(0, +r.value - 1); upd(); };
+  $("volPlus").onclick  = () => { r.value = Math.min(100, +r.value + 1); upd(); };
+  $("volOk").onclick = () => {
+    const v = +r.value;
+    if (v % 5 === 0) finish(100, "Multiple de 5 validé, cerveau apaisé 😌");
+    else if (v % 2 === 0) finish(50, "Pair… ça passe. Mais un multiple de 5 aurait été plus propre.");
+    else finish(0, "Quel genre de monstre écoute le son à " + v + " ?!");
+  };
+}
+
+/* ---------- ÉPREUVE 2 : l'intrus visuel ---------- */
+function ep2(body, finish){
+  const N = 25, odd = rand(N), hue = pick([8, 200, 150, 280, 330]), mode = pick(["rot", "shade"]);
+  let cells = "";
+  for (let i=0;i<N;i++){
+    let st = "background:hsl(" + hue + " 85% 58%)";
+    if (i === odd){ st = mode === "rot" ? st + ";transform:rotate(3deg)" : "background:hsl(" + hue + " 85% 65%)"; }
+    cells += '<button class="sq" data-i="' + i + '" style="' + st + '" aria-label="carré"></button>';
+  }
+  body.innerHTML = timerHTML() + '<div class="sqgrid">' + cells + '</div>';
+  let over = false;
+  const hint = () => document.querySelector('.sq[data-i="' + odd + '"]').classList.add("hint");
+  const t0 = performance.now();
+  document.querySelectorAll(".sq").forEach(b => b.addEventListener("click", () => {
+    if (over) return; over = true;
+    const t = (performance.now() - t0) / 1000;
+    if (+b.dataset.i === odd){
+      const s = t <= 4 ? 100 : Math.max(20, Math.round(100 * (20 - t) / 16));
+      finish(s, t < 6 ? "Œil bionique détecté en " + t.toFixed(1) + "s !" : "Trouvé en " + t.toFixed(1) + "s : l'alignement est sauvé.");
+    } else {
+      sfx.bonk(); hint();
+      later(() => finish(10, "Pas le bon carré… le vrai intrus t'a échappé."), 800);
+    }
+  }));
+  countdown(20000, (l) => tickBar(l, 20000), () => {
+    if (over) return; over = true; sfx.bonk(); hint();
+    later(() => finish(0, "Temps écoulé : ce carré tordu va t'empêcher de dormir (ou pas)."), 800);
+  });
+}
+
+/* ---------- ÉPREUVE 3 : les cuillères ---------- */
+const HANDLE = (d, w) => '<path d="' + d + '" fill="none" stroke="#111" stroke-width="' + (w+8) + '" stroke-linecap="round" stroke-linejoin="round"/><path d="' + d + '" fill="none" stroke="#C9D1D9" stroke-width="' + w + '" stroke-linecap="round" stroke-linejoin="round"/>';
+const SPOONS = [
+  { label:"La cantine", score:5,
+    msg:"La cuillère de cantine géante ? Tu t'adaptes à tout, esprit libre.",
+    svg:'<svg viewBox="0 0 100 200">' + HANDLE("M50 90 L50 188", 22) + '<ellipse cx="50" cy="52" rx="42" ry="46" fill="#C9D1D9" stroke="#111" stroke-width="4"/></svg>' },
+  { label:"La carrée", score:15,
+    msg:"La carrée… et tu manges avec ? Bravo pour ta tolérance, c'est rare.",
+    svg:'<svg viewBox="0 0 100 200">' + HANDLE("M50 78 L50 118 L72 140 L72 190", 12) + '<g transform="rotate(-10 50 44)"><rect x="14" y="10" width="72" height="68" rx="4" fill="#C9D1D9" stroke="#111" stroke-width="4"/></g></svg>' },
+  { label:"La torsadée", score:40,
+    msg:"Torsadée : jolie, mais ce manche qui gratte la paume, non merci. Tu hésites déjà.",
+    svg:'<svg viewBox="0 0 100 200">' + HANDLE("M50 70 C72 92 28 112 50 134 S72 176 50 190", 8) + '<ellipse cx="50" cy="40" rx="26" ry="34" fill="#C9D1D9" stroke="#111" stroke-width="4"/></svg>' },
+  { label:"La parfaite", score:100,
+    msg:"Symétrique, lisse, équilibrée : ton cerveau a enfin pu respirer. Les formes bizarres sont rejetées sans pitié.",
+    svg:'<svg viewBox="0 0 100 200">' + HANDLE("M50 68 L50 190", 6) + '<ellipse cx="50" cy="40" rx="24" ry="32" fill="#C9D1D9" stroke="#111" stroke-width="4"/><path d="M40 26 Q36 40 42 54" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".85"/></svg>' }
+];
+function ep3(body, finish){
+  const list = shuffle(SPOONS);
+  body.innerHTML = '<div class="grid grid-cols-2 gap-4">' + list.map((s,i) =>
+    '<button class="spoon pick" data-i="' + i + '">' + s.svg + '<div class="mt-1">' + s.label + '</div></button>').join("") + '</div>';
+  body.querySelectorAll(".spoon").forEach(b => b.addEventListener("click", () => {
+    const s = list[+b.dataset.i]; b.classList.add("picked");
+    finish(s.score, s.msg);
+  }));
+}
+
+/* ---------- ÉPREUVE 4 : logique pure ---------- */
+const PUZZLES = [
+  { seq:[2,6,12,20,30], ans:42, wrong:[40,44,36], rule:"+4, +6, +8, +10, puis +12." },
+  { seq:[1,1,2,3,5,8],  ans:13, wrong:[11,12,14], rule:"chaque nombre est la somme des deux précédents." },
+  { seq:[3,6,11,18,27], ans:38, wrong:[36,39,40], rule:"+3, +5, +7, +9, puis +11." },
+  { seq:[2,3,5,9,17],   ans:33, wrong:[31,34,35], rule:"+1, +2, +4, +8, puis +16." },
+  { seq:["🟥","🟦","🟩","🟨","🟥","🟦","🟩"], ans:"🟨", wrong:["🟥","🟦","🟩"], rule:"un cycle de 4 couleurs qui se répète." }
+];
+function ep4(body, finish){
+  const p = pick(PUZZLES), total = 40000;
+  const opts = shuffle([p.ans].concat(p.wrong));
+  body.innerHTML = timerHTML() +
+    '<div class="flex flex-wrap justify-center gap-2 mb-2">' +
+      p.seq.map(x => '<div class="chip">' + x + '</div>').join("") + '<div class="chip q">?</div>' +
+    '</div>' +
+    '<p class="text-center text-sm font-bold mb-4">⚡ Bonus max si tu réponds en moins de 15 secondes</p>' +
+    '<div class="grid grid-cols-2 gap-4">' + opts.map((o,i) =>
+      '<button class="btn pick display text-3xl py-4 bg-white" data-i="' + i + '">' + o + '</button>').join("") + '</div>';
+  let over = false; const t0 = performance.now();
+  body.querySelectorAll(".pick").forEach(b => b.addEventListener("click", () => {
+    if (over) return; over = true;
+    const t = (performance.now() - t0) / 1000;
+    if (opts[+b.dataset.i] === p.ans){
+      b.classList.add("picked");
+      const s = t <= 15 ? 100 : Math.round(100 - (t - 15) / 25 * 40);
+      finish(s, t <= 15 ? "Réponse en " + t.toFixed(1) + "s : cerveau en mode tableur ! (" + p.rule + ")"
+                       : "Bonne réponse en " + t.toFixed(1) + "s. Le motif était : " + p.rule);
+    } else {
+      sfx.bonk(); finish(10, "Raté ! La logique était : " + p.rule);
+    }
+  }));
+  countdown(total, (l) => tickBar(l, total), () => {
+    if (over) return; over = true; finish(0, "Temps écoulé ! La logique était : " + p.rule);
+  });
+}
+
+/* ---------- ÉPREUVE 5 : évitement social ---------- */
+function ep5(body, finish){
+  const total = 15000;
+  const acts = shuffle([
+    { t:"📱 Sortir son tel et fixer l'écran en marchant vite", s:80, m:"Le classique intemporel : tu fixes l'écran comme un pro." },
+    { t:"↗️ Traverser la route en diagonale sans regarder",   s:100, m:"Trajectoire d'évitement digne de la NASA validée 🛰️" },
+    { t:"↩️ Faire demi-tour brusquement",                      s:90,  m:"Demi-tour de cinéma : « j'ai oublié un truc »." },
+    { t:"👋 Dire bonjour normalement",                          s:0,   m:"Bonjour normalement ?! Espèce rare, très sociable." }
+  ]);
+  body.innerHTML = timerHTML() +
+    '<div class="road"><span id="walker" class="walker">🚶</span><span class="you">🧍</span><span id="dist" class="distlab">50 m</span></div>' +
+    '<div class="space-y-3 mt-4">' + answerButtons(acts) + '</div>';
+  const w = $("walker");
+  requestAnimationFrame(() => requestAnimationFrame(() => { w.style.left = "calc(100% - 6.2rem)"; }));
+  let over = false;
+  body.querySelectorAll(".pick").forEach(b => b.addEventListener("click", () => {
+    if (over) return; over = true;
+    const a = acts[+b.dataset.i]; b.classList.add("picked"); finish(a.s, a.m);
+  }));
+  countdown(total, (l) => { tickBar(l, total); $("dist").textContent = Math.ceil(50 * l / total) + " m"; }, () => {
+    if (over) return; over = true;
+    finish(60, "Figé comme un cerf devant des phares : la stratégie « statue » est reconnue.");
+  });
+}
+
+/* ---------- ÉPREUVE 6 : le tri maniaque (version claire) ---------- */
+function ep6(body, finish){
+  const total = 25000, sizes = [26, 40, 54, 68, 82];
+  const order = shuffle([0,1,2,3,4]);
+  body.innerHTML = timerHTML() +
+    '<p class="text-center font-bold mb-2">1️⃣ Clique les carrés <u>du plus PETIT au plus GRAND</u></p>' +
+    '<div id="pool" class="flex items-end justify-center gap-2 py-3 px-2 border-[3px] border-black rounded-xl bg-[#FFFBEA]" style="min-height:112px"></div>' +
+    '<p class="text-center font-bold mt-4 mb-2">2️⃣ Ton rangement</p>' +
+    '<div class="flex items-center justify-center gap-1 text-xs font-bold mb-1"><span>🔹 PETIT</span><span class="flex-1 text-center">─────────────▶</span><span>GRAND 🔷</span></div>' +
+    '<div id="slots6" class="flex items-end justify-center gap-2 py-2 px-2 border-[3px] border-dashed border-black rounded-xl" style="min-height:102px"></div>' +
+    '<p id="sortInfo" class="text-center font-bold mt-3">0/5 rangés</p>';
+  for (let i=0;i<5;i++){
+    const sl = document.createElement("div");
+    sl.id = "sl" + i;
+    sl.style.cssText = "width:" + sizes[i] + "px;height:" + sizes[i] + "px;border:3px dashed #9a9a9a;border-radius:8px;display:grid;place-items:center;color:#9a9a9a;font-family:'Bagel Fat One',system-ui;font-size:1.1rem";
+    sl.textContent = i + 1;
+    $("slots6").appendChild(sl);
+  }
+  let next = 0, errors = 0, over = false; const t0 = performance.now();
+  order.forEach((k) => {
+    const b = document.createElement("button");
+    b.className = "blk"; b.style.width = sizes[k] + "px"; b.style.height = sizes[k] + "px"; b.style.background = "#4D96FF";
+    b.setAttribute("aria-label", "carré");
+    b.addEventListener("click", () => {
+      if (over) return;
+      if (k === next){
+        b.style.visibility = "hidden"; b.disabled = true;
+        const sl = $("sl" + next);
+        sl.style.cssText += ";border:3px solid #111;background:#5FD38D;color:#111;box-shadow:3px 3px 0 #111";
+        sfx.pop(next); next++;
+        $("sortInfo").textContent = next + "/5 rangés";
+        if (next === 5){
+          over = true; const t = (performance.now() - t0) / 1000;
+          const pen = t > 14 ? (t - 14) / 11 * 30 : 0;
+          const s = clamp(Math.round(100 - errors * 18 - pen), 25, 100);
+          finish(s, errors === 0 ? "Rangé en " + t.toFixed(1) + "s sans une faute : cerveau apaisé." : "Rangé en " + t.toFixed(1) + "s avec " + errors + " erreur(s). Ça gratte, mais c'est fait.");
+        }
+      } else {
+        errors++; sfx.bonk(); b.classList.remove("shake"); void b.offsetWidth; b.classList.add("shake");
+      }
+    });
+    $("pool").appendChild(b);
+  });
+  countdown(total, (l) => tickBar(l, total), () => {
+    if (over) return; over = true;
+    finish(Math.round(next / 5 * 40), next + "/5 rangés : le désordre t'a eu, ton cerveau est en surchauffe.");
+  });
+}
+
+/* ---------- ÉPREUVE 7 : mémoire flash ---------- */
+function ep7(body, finish){
+  body.innerHTML = '<div class="text-center"><p class="mb-5 font-bold">5 chiffres, 1,5 seconde, pas une de plus. Tape quand tu es prêt.</p>' +
+    '<button id="memGo" class="btn display text-2xl px-8 py-4 bg-[#FFD93D]">👀 Montre-moi le code</button></div>';
+  $("memGo").onclick = () => {
+    const code = Array.from({length:5}, () => rand(10));
+    body.innerHTML = timerHTML() +
+      '<div class="flex justify-center gap-2">' + code.map(d => '<div class="slot">' + d + '</div>').join("") + '</div>' +
+      '<p class="text-center font-bold mt-4">Mémorise !</p>';
+    sfx.pop(2);
+    countdown(1500, (l) => tickBar(l, 1500), () => ask(code));
+  };
+  function ask(code){
+    const entry = []; let over = false;
+    body.innerHTML = '<div class="flex justify-center gap-2" id="slots"></div>' +
+      '<p class="text-center font-bold mt-3">Retape le code !</p><div class="keypad" id="kp"></div>';
+    const draw = () => { $("slots").innerHTML = Array.from({length:5}, (_, i) => '<div class="slot">' + (entry[i] !== undefined ? entry[i] : "•") + '</div>').join(""); };
+    const check = () => {
+      over = true;
+      let m = 0; code.forEach((d, i) => { if (entry[i] === d) m++; });
+      const s = Math.round(m / 5 * 100);
+      finish(s, m === 5 ? "5/5 : mémoire d'éléphant, focus laser !" : m + "/5 : le code était " + code.join(" ") + ".");
+    };
+    const press = (d) => { if (over || entry.length >= 5) return; entry.push(d); sfx.pop(entry.length); draw(); if (entry.length === 5) later(check, 350); };
+    const back = () => { if (over) return; entry.pop(); draw(); sfx.tick(); };
+    draw();
+    const keys = [1,2,3,4,5,6,7,8,9,"⌫",0,""];
+    keys.forEach(k => {
+      if (k === ""){ $("kp").appendChild(document.createElement("div")); return; }
+      const b = document.createElement("button");
+      b.className = "btn key display bg-white"; b.textContent = k;
+      b.onclick = () => k === "⌫" ? back() : press(k);
+      $("kp").appendChild(b);
+    });
+    keyHandler = (e) => { if (/^[0-9]$/.test(e.key)) press(+e.key); else if (e.key === "Backspace") back(); };
+  }
+}
+
+/* ---------- ÉPREUVE 8 : le piège de l'hyperfixation ---------- */
+function ep8(body, finish){
+  const items = shuffle([
+    { t:"Je lis le titre, je ferme et je dors direct.", s:0, m:"Dodo direct. Une personne saine d'esprit, on s'incline." },
+    { t:"Je lis le résumé, 10 minutes, et dodo. Promis.", s:35, m:"Dix minutes… la célèbre promesse que personne ne tient." },
+    { t:"À 3h je suis sur les classes de sous-marins nucléaires. Je dors à 4h.", s:70, m:"3h, 14 onglets, et le réveil à 7h sera un jugement dernier." },
+    { t:"À 4h30 je connais le nom de tous les ingénieurs et le diamètre des boulons.", s:100, m:"Hyperfixation maximale : le boulon de 80 mm n'a plus de secret pour toi." }
+  ]);
+  body.innerHTML = '<div class="text-5xl text-center mb-4">⚓📖</div><div class="space-y-3">' + answerButtons(items) + '</div>';
+  body.querySelectorAll(".pick").forEach(b => b.addEventListener("click", () => {
+    const a = items[+b.dataset.i]; b.classList.add("picked"); finish(a.s, a.m);
+  }));
+}
+
+/* =========================================================
+   DÉFINITION DES 8 ÉPREUVES
+   (w = poids de chaque épreuve dans les 4 jauges de stats)
+   ========================================================= */
+const EPREUVES = [
+  { badge:"🎮 MINI-JEU",       name:"Le Test du Volume",        title:"Le Test du Volume",
+    instr:"Règle le volume de la voiture sur un niveau acceptable avant de démarrer.", w:{logic:1}, render:ep1 },
+  { badge:"👁️ OBSERVATION",   name:"L'Intrus Visuel",          title:"L'Intrus Visuel",
+    instr:"Vite ! Trouve le carré qui ruine l'alignement avant la fin du chrono (20 secondes) !", w:{details:1}, render:ep2 },
+  { badge:"🥄 CHOIX VISUEL",   name:"Les Petites Cuillères",    title:"Le Test des Petites Cuillères",
+    instr:"Tu dois manger un yaourt. Choisis ta cuillère.", w:{details:1}, render:ep3 },
+  { badge:"🧠 LOGIQUE",        name:"Logique Pure & Motifs",    title:"Logique Pure & Motifs",
+    instr:"Complète la suite logique le plus vite possible.", w:{logic:1}, render:ep4 },
+  { badge:"⚡ RÉFLEXE",        name:"Le Radar d'Évitement",     title:"Le Radar d'Évitement Social",
+    instr:"Quelqu'un que tu connais vaguement marche vers toi sur le trottoir, à 50 mètres. Que fais-tu ?", w:{social:1}, render:ep5 },
+  { badge:"🎮 MINI-JEU",       name:"Le Tri Maniaque",          title:"Le Tri Maniaque",
+    instr:"Remets ces 5 carrés du plus petit au plus grand pour calmer ton cerveau. Tu as 25 secondes !", w:{logic:.5, details:.5}, render:ep6 },
+  { badge:"🎯 FOCUS",          name:"La Mémoire Flash",         title:"La Mémoire Flash",
+    instr:"Mémorise ce code en 2 secondes !", w:{hyperfocus:1}, render:ep7 },
+  { badge:"🎭 MISE EN SITUATION", name:"Le Piège de l'Hyperfixation", title:"Le Piège de l'Hyperfixation",
+    instr:"Il est 2h14 du matin, tu as cours/boulot demain à 8h. Tu tombes sur un article Wikipédia sur l'histoire des sous-marins soviétiques.", w:{hyperfocus:.7, social:.3}, render:ep8 }
+];
+
+const STATS = [
+  { key:"hyperfocus", label:"Hyperfixation Wikipédia",          emoji:"🧠", color:"#FF6FA8" },
+  { key:"details",    label:"Intolérance aux bruits / détails", emoji:"🔊", color:"#4D96FF" },
+  { key:"social",     label:"Batterie sociale en PLS",           emoji:"🔋", color:"#FFD93D" },
+  { key:"logic",      label:"Rigidité des habitudes",            emoji:"📐", color:"#5FD38D" }
+];
+
+const TIERS = [
+  { max:20,  emoji:"🧍", title:"PNJ Certifié Standard", color:"#4D96FF",
+    desc:"Tout glisse chez toi, la vie est fluide. Tu es la preuve vivante que « ça va » existe. On t'envie un peu, pas gêné." },
+  { max:50,  emoji:"🕵️", title:"Suspect mais Discret", color:"#FFD93D",
+    desc:"Quelques manies bien planquées et deux-trois obsessions de salon. Personne se doute de rien… sauf toi, qui sais très bien pour la cuillère." },
+  { max:80,  emoji:"🏛️", title:"Architecte de Wikipédia", color:"#FF6FA8",
+    desc:"Tu construis des cathédrales de savoir inutile à 2h du mat'. Ton cerveau a des onglets ouverts depuis 2019, et c'est ça qui fait ton charme." },
+  { max:100, emoji:"👑", title:"Grand Maître de l'Hyperfocus", color:"#A66BFF",
+    desc:"Quand tu t'intéresses à un sujet, l'univers s'écarte. Tu as des systèmes, des règles et des avis sur tout. Respect éternel, et pense à boire de l'eau." }
+];
 
 /* =========================================================
    TRANSITIONS D'ÉCRAN
@@ -457,9 +718,6 @@ function show(id, silent){
   } else enter();
 }
 
-/* =========================================================
-   MUTE
-   ========================================================= */
 $("muteBtn").addEventListener("click", () => {
   muted = !muted;
   $("muteBtn").textContent = muted ? "🔇" : "🔊";
@@ -467,121 +725,107 @@ $("muteBtn").addEventListener("click", () => {
 });
 
 /* =========================================================
-   QUIZ
+   PROGRESSION & COMPTEUR EN DIRECT
    ========================================================= */
 function setProgress(done){
-  const pct = Math.round(done / QUESTIONS.length * 100);
+  const pct = Math.round(done / EPREUVES.length * 100);
   const bar = $("progressBar");
   bar.style.width = pct + "%";
   const hue = 340 - pct * 2.1;
   bar.style.backgroundColor = "hsl(" + hue + " 95% 58%)";
   bar.style.boxShadow = "0 0 " + (8 + pct/5) + "px hsl(" + hue + " 100% 60%)";
 }
+const avg = () => scores.length ? Math.round(scores.reduce((a,b) => a + b, 0) / scores.length) : 0;
+function updateMeter(){
+  const chip = $("meterChip");
+  chip.style.display = scores.length ? "inline-flex" : "none";
+  $("meterNum").textContent = avg() + "%";
+  chip.animate([{transform:"scale(1.4) rotate(-6deg)"},{transform:"scale(1) rotate(0)"}], {duration:300, easing:"cubic-bezier(.3,1.6,.5,1)"});
+}
 
-function startQuiz(){
+/* =========================================================
+   LANCEMENT & DÉROULÉ
+   ========================================================= */
+function startGame(){
   audio();
-  current = 0; answers = []; combo = 0; maxCombo = 0; locked = false;
+  scores = []; epIndex = 0;
   $("progressWrap").classList.add("on");
-  $("comboChip").style.display = "none";
+  $("meterChip").style.display = "none";
   setProgress(0);
-  renderQuestion();
-  show("quiz");
+  runEpreuve(0, true);
+  show("play");
 }
 
-function renderQuestion(){
-  const q = QUESTIONS[current];
-  const opts = shuffle(q.a.map((x,i) => ({...x, i})));
-  const letters = ["A","B","C","D"];
-  $("qCount").textContent = (current+1) + "/" + QUESTIONS.length;
-  const card = $("qCard");
+function runEpreuve(i, first){
+  epIndex = i; epToken++;
+  const token = epToken, ep = EPREUVES[i];
+  let done = false;
+  $("epStep").textContent = "ÉPREUVE " + (i+1) + "/" + EPREUVES.length;
+  $("epBadge").textContent = ep.badge;
+  $("epTitle").textContent = ep.title;
+  $("epInstr").textContent = ep.instr;
+  $("epBody").innerHTML = "";
+  const card = $("epCard");
   card.classList.remove("qcard-in"); void card.offsetWidth; card.classList.add("qcard-in");
-  card.innerHTML =
-    '<div class="flex items-start gap-3 mb-5">' +
-      '<div class="text-5xl bob" style="animation-duration:3s">' + q.emoji + '</div>' +
-      '<h2 class="display text-xl sm:text-2xl leading-snug pt-1">' + q.q + '</h2>' +
-    '</div>' +
-    '<div class="space-y-4" id="opts">' +
-      opts.map((o,idx) =>
-        '<button class="answer" data-idx="' + idx + '">' +
-          '<span class="letter">' + letters[idx] + '</span><span>' + o.t + '</span>' +
-        '</button>').join("") +
-    '</div>';
-  card._opts = opts;
-  card.querySelectorAll(".answer").forEach(btn => {
-    btn.addEventListener("click", (e) => choose(Number(btn.dataset.idx), e));
-    btn.addEventListener("mouseenter", () => sfx.hover());
-  });
-  locked = false;
+  if (!first){ sfx.whoosh(); window.scrollTo({top:0, behavior:"smooth"}); }
+
+  keyHandler = (e) => {
+    const n = parseInt(e.key, 10);
+    if (n >= 1 && n <= 4){ const b = document.querySelectorAll("#epBody .pick")[n-1]; if (b) b.click(); }
+  };
+
+  const finish = (score, msg) => {
+    if (done || token !== epToken) return;
+    done = true; epToken++; keyHandler = null;
+    scores[i] = score;
+    setProgress(i + 1); updateMeter();
+    feedback(score, msg, () => {
+      if (i + 1 < EPREUVES.length) runEpreuve(i + 1);
+      else runAnalysis();
+    });
+  };
+  ep.render($("epBody"), finish);
 }
 
-function choose(idx, evt){
-  if (locked) return; locked = true;
-  const card = $("qCard"), opt = card._opts[idx], q = QUESTIONS[current];
-  const btns = card.querySelectorAll(".answer");
-  btns.forEach((b,i) => { b.classList.add("locked"); b.classList.add(i === idx ? "picked" : "dim"); });
-  const tag = document.createElement("span"); tag.className = "tag"; tag.textContent = TAGS[opt.p];
-  btns[idx].appendChild(tag);
-
-  answers.push({ stat:q.stat, p:opt.p });
-  sfx.pop(opt.p);
-
-  if (opt.p >= 2){ combo++; maxCombo = Math.max(maxCombo, combo); if (combo >= 2) setTimeout(() => sfx.combo(combo), 120); }
-  else combo = 0;
-  updateCombo();
-
-  let x, y;
-  const r = btns[idx].getBoundingClientRect();
-  if (evt && typeof evt.clientX === "number" && evt.clientX > 0){ x = evt.clientX; y = evt.clientY; }
-  else { x = r.left + r.width/2; y = r.top + r.height/2; }
-  floatReaction(opt.r, x, y, opt.p);
-  if (opt.p === 3) floatReaction("Niveau boss final !", window.innerWidth/2, 120, 4, true);
-
-  current++;
-  setProgress(current);
-  setTimeout(() => {
-    if (current < QUESTIONS.length){ sfx.whoosh(); renderQuestion(); window.scrollTo({top:0, behavior:"smooth"}); }
-    else runAnalysis();
-  }, 850);
-}
-
-function updateCombo(){
-  const chip = $("comboChip");
-  if (combo >= 2){
-    chip.style.display = "inline-flex";
-    $("comboNum").textContent = "x" + combo;
-    chip.animate([{transform:"scale(1.4) rotate(-6deg)"},{transform:"scale(1) rotate(0)"}], {duration:300, easing:"cubic-bezier(.3,1.6,.5,1)"});
-  } else chip.style.display = "none";
-}
-
-function floatReaction(text, x, y, p, big){
-  const colors = ["#4D96FF","#FFD93D","#FF9F45","#FF6FA8","#A66BFF"];
-  const el = document.createElement("div");
-  el.className = "floaty";
-  el.textContent = text;
-  el.style.left = Math.min(Math.max(x, 90), window.innerWidth - 90) + "px";
-  el.style.top = y + "px";
-  el.style.background = colors[p % colors.length];
-  el.style.color = "#111";
-  el.style.setProperty("--r", (Math.random()*14 - 7).toFixed(1) + "deg");
-  if (big){ el.style.fontSize = "1.15rem"; el.style.background = "#A66BFF"; el.style.color = "#fff"; }
-  document.body.appendChild(el);
-  setTimeout(() => el.remove(), 1600);
+function feedback(score, msg, cb){
+  const gain = score / 100 * (100 / EPREUVES.length);
+  const gainTxt = "+" + gain.toFixed(1).replace(".", ",").replace(",0", "") + "%";
+  const [emoji, title, color] =
+    score >= 85 ? ["🎯", "PARFAIT !", "#5FD38D"] :
+    score >= 60 ? ["🔥", "BIEN JOUÉ !", "#FFD93D"] :
+    score >= 30 ? ["👍", "PAS MAL !", "#4D96FF"] :
+    score >= 1  ? ["😬", "BOF…", "#FF9F45"] :
+                  ["🧍", "PNJ DÉTECTÉ !", "#FF6FA8"];
+  $("fbCard").style.background = color;
+  $("fbCard").innerHTML =
+    '<div class="text-6xl mb-1">' + emoji + '</div>' +
+    '<div class="display" style="font-size:clamp(2.2rem,11vw,3.6rem);line-height:1.05">' + title + '</div>' +
+    '<div class="display mt-1" style="font-size:clamp(2rem,10vw,3rem);-webkit-text-stroke:2px #111;color:#fff;text-shadow:3px 3px 0 #111">' + gainTxt + '</div>' +
+    '<p class="font-bold mt-3 text-base sm:text-lg">' + msg + '</p>' +
+    '<p class="text-xs mt-3 opacity-60">Touche pour continuer</p>';
+  const fb = $("fb");
+  fb.classList.add("on");
+  sfx.win(score); if (score === 0) setTimeout(() => sfx.bonk(), 200);
+  let gone = false;
+  const go = () => { if (gone) return; gone = true; fb.classList.remove("on"); fb.onclick = null; cb(); };
+  fb.onclick = go;
+  setTimeout(go, msg.length > 70 ? 2800 : 2200);
 }
 
 /* =========================================================
    FAUX ÉCRAN D'ANALYSE (3,5 s)
    ========================================================= */
 const LOAD_MSGS = [
-  "Analyse du nombre d'onglets ouverts…",
+  "Analyse du volume sonore préféré…",
+  "Mesure du temps de réaction face au carré tordu…",
   "Calibrage de la tolérance aux petites cuillères…",
-  "Calcul du taux d'évitement des appels téléphoniques…",
-  "Mesure de la pertinence du volume pair…",
-  "Détection des étiquettes de t-shirt fantômes…",
+  "Calcul du taux d'évitement des gens dans la rue…",
+  "Comptage des onglets Wikipédia ouverts…",
   "Compilation des hyperfixations de 2019 à aujourd'hui…"
 ];
 function runAnalysis(){
   $("progressWrap").classList.remove("on");
-  $("comboChip").style.display = "none";
+  $("meterChip").style.display = "none";
   show("loading");
   const DURATION = 3500;
   setTimeout(() => sfx.rise(3.5), 300);
@@ -605,27 +849,30 @@ function runAnalysis(){
 /* =========================================================
    RÉSULTAT
    ========================================================= */
+let lastPct = 0, lastTier = null, lastStats = null, lastBest = "";
 function computeResults(){
-  const total = answers.reduce((s,a) => s + a.p, 0);
-  const pct = Math.round(total / (QUESTIONS.length * 3) * 100);
+  const pct = avg();
   const stats = STATS.map(s => {
-    const mine = answers.filter(a => a.stat === s.key), sum = mine.reduce((x,a) => x + a.p, 0);
-    return { ...s, pct: Math.round(sum / (mine.length * 3) * 100) };
+    let n = 0, d = 0;
+    EPREUVES.forEach((e, i) => { const w = e.w[s.key] || 0; n += (scores[i] || 0) * w; d += w; });
+    return { ...s, pct: d ? Math.round(n / d) : 0 };
   });
   const tier = TIERS.find(t => pct <= t.max) || TIERS[TIERS.length-1];
-  return { pct, stats, tier };
+  let best = 0; scores.forEach((s, i) => { if (s > scores[best]) best = i; });
+  return { pct, stats, tier, best };
 }
 
 function showResult(){
-  const { pct, stats, tier } = computeResults();
+  const { pct, stats, tier, best } = computeResults();
   lastPct = pct; lastTier = tier; lastStats = stats;
+  lastBest = EPREUVES[best].name + " (" + scores[best] + "%)";
 
   $("bigPct").textContent = "0%";
   $("rankEmoji").textContent = tier.emoji;
   $("rankTitle").textContent = tier.title;
   $("rankBox").style.background = tier.color;
   $("rankDesc").textContent = tier.desc;
-  $("comboRes").textContent = "🔥 Meilleur combo de sincérité : x" + maxCombo;
+  $("bestRes").textContent = "🏆 Épreuve la plus marquante : " + lastBest;
 
   $("stats").innerHTML = stats.map(s =>
     '<div class="wiggle">' +
@@ -689,7 +936,7 @@ function buildSummary(){
     "",
     ...lastStats.map(s => s.emoji + " " + s.label + "\n" + bar(s.pct) + " " + s.pct + "%"),
     "",
-    "🔥 Meilleur combo de sincérité : x" + maxCombo,
+    "🏆 Épreuve la plus marquante : " + lastBest,
     "",
     "Et toi, t'es à combien ? 👀"
   ];
@@ -718,18 +965,11 @@ async function copyResult(){
 /* =========================================================
    INIT & ÉVÉNEMENTS
    ========================================================= */
-$("startBtn").addEventListener("click", startQuiz);
+$("startBtn").addEventListener("click", startGame);
 $("copyBtn").addEventListener("click", copyResult);
 $("replayBtn").addEventListener("click", () => { audio(); sfx.pop(2); show("intro"); });
 
-document.addEventListener("keydown", (e) => {
-  if (!$("quiz").classList.contains("active") || locked) return;
-  const n = parseInt(e.key, 10);
-  if (n >= 1 && n <= 4){
-    const btn = document.querySelectorAll("#qCard .answer")[n-1];
-    if (btn) btn.click();
-  }
-});
+document.addEventListener("keydown", (e) => { if (keyHandler) keyHandler(e); });
 
 const cur = $("cursor");
 window.addEventListener("mousemove", (e) => { cur.style.transform = "translate(" + e.clientX + "px," + e.clientY + "px)"; });
