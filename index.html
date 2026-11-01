@@ -231,7 +231,9 @@
 <!-- feedback plein écran -->
 <div id="fb"><div id="fbCard" class="card"></div></div>
 
-<!-- ========== INTRO ========== -->
+<main class="relative z-10 mx-auto w-full max-w-xl px-4 pt-24 pb-16">
+
+  <!-- ========== INTRO ========== -->
   <section id="intro" class="screen active">
     <div class="card p-6 sm:p-8 text-center">
       <div class="bob text-7xl mb-2 inline-block">🧠</div>
@@ -751,3 +753,580 @@ function choiceEp(cfg){
     }));
   };
 }
+
+const ep9  = choiceEp({ emoji:"🔊", sounds:[
+  { label:"Le néon qui bourdonne", play(){ tone({freq:100, type:"sawtooth", dur:1.4, vol:.07}); tone({freq:200, type:"sawtooth", dur:1.4, vol:.04}); } },
+  { label:"Le bip du frigo ouvert", play(){ [0,.4,.8].forEach(t => tone({freq:1800, type:"square", start:t, dur:.18, vol:.05})); } },
+  { label:"Le stylo qui clique", play(){ for (let i=0;i<7;i++) tone({freq:3200, type:"square", start:i*.17, dur:.02, vol:.09}); } }
+], opts:[
+  ["Franchement, aucun ne me gêne.", 0, "Oreilles en acier inoxydable."],
+  ["Un peu agaçants, mais je tiens le coup.", 35, "Tolérance moyenne : le bruit est noté."],
+  ["Un des trois me fait vraiment serrer les dents.", 70, "Ça sent le vécu : un son précis, une rancune éternelle."],
+  ["Les trois : je quitte la pièce.", 100, "Radar à bruits : activé en permanence."]
+]});
+
+
+
+
+const ep15 = choiceEp({ emoji:"🗺️", opts:[
+  ["Je suis le GPS sans réfléchir, peu importe le chemin.", 0, "Confiance totale dans la flèche bleue."],
+  ["J'ai un trajet préféré, mais je m'adapte.", 35, "Flexible, avec une préférence."],
+  ["Je prends toujours le même chemin, même s'il est plus long.", 75, "Le chemin habituel a gagné."],
+  ["Si une rue est fermée, ma journée est compromise.", 100, "Les travaux sont tes ennemis jurés."]
+]});
+
+
+
+const ep18 = choiceEp({ emoji:"🧲", opts:[
+  ["Je m'intéresse à plein de choses, mais ça ne dure pas.", 0, "Curieux touche-à-tout."],
+  ["J'ai un sujet favori, mais je ne pense pas qu'à ça.", 35, "Passion mesurée."],
+  ["Je peux parler de mon sujet pendant 2 heures si on me laisse.", 75, "Conférence improvisée."],
+  ["J'ai déjà acheté un classeur, un abonnement, et le sujet occupe tout mon cerveau.", 100, "Hyperfixation maximale : le sujet t'habite."]
+]});
+
+const ep19 = choiceEp({ emoji:"🧥", opts:[
+  ["Je ne remarque jamais les textures de mes vêtements.", 0, "Peau de dragon."],
+  ["Un pull qui gratte, ça m'agace un peu.", 35, "Sensibilité normale."],
+  ["Je ne porte que 3 ou 4 vêtements, les seuls vraiment confortables.", 75, "Garde-robe de survie."],
+  ["Je coupe les étiquettes, j'évite les coutures, et je connais la matière de chaque truc.", 100, "Ton corps a des exigences précises."]
+]});
+
+
+/* ---------- ÉPREUVE 10 : le cercle parfait ---------- */
+function ep10(body, finish){
+  body.innerHTML = '<div class="text-center">' + HONEST +
+    '<canvas id="cvs" width="300" height="300" style="touch-action:none;border:3px solid #111;border-radius:16px;background:#FFFBEA;max-width:100%"></canvas>' +
+    '<p id="cvsInfo" class="font-bold mt-2 text-sm">Dessine un cercle avec ton doigt ou la souris. Recommence autant de fois que tu veux, valide quand tu es satisfait·e.</p>' +
+    '<div class="grid grid-cols-2 gap-3 mt-3"><button id="cvsClear" class="btn px-3 py-3 bg-white">🧽 Recommencer</button><button id="cvsOk" class="btn px-3 py-3 bg-[#5FD38D]">✅ Valider</button></div></div>';
+  const cv = $("cvs"), ctx = cv.getContext("2d");
+  let down = false, retries = 0, drew = false;
+  ctx.lineWidth = 5; ctx.lineCap = "round"; ctx.strokeStyle = "#111";
+  const pos = (e) => { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) * cv.width / r.width, (e.clientY - r.top) * cv.height / r.height]; };
+  cv.addEventListener("pointerdown", (e) => { e.preventDefault(); cv.setPointerCapture(e.pointerId); down = true; drew = true; const [x,y] = pos(e); ctx.beginPath(); ctx.moveTo(x,y); });
+  cv.addEventListener("pointermove", (e) => { if (!down) return; const [x,y] = pos(e); ctx.lineTo(x,y); ctx.stroke(); });
+  const up = () => { down = false; };
+  cv.addEventListener("pointerup", up); cv.addEventListener("pointercancel", up);
+  $("cvsClear").onclick = () => { ctx.clearRect(0,0,cv.width,cv.height); if (drew){ retries++; drew = false; sfx.pop(1); $("cvsInfo").textContent = "Recommencé " + retries + " fois. Vas-y, prends ton temps."; } };
+  $("cvsOk").onclick = () => {
+    const s = retries === 0 ? 15 : retries === 1 ? 45 : retries === 2 ? 75 : 100;
+    finish(s, retries === 0 ? "Du premier coup : tu laisses filer le cercle imparfait." : "Recommencé " + retries + " fois : le cercle parfait mérite son temps.");
+  };
+}
+
+/* ---------- ÉPREUVE 11 : pile sur le trait ---------- */
+function ep11(body, finish){
+  const start = pick([31, 68]);
+  body.innerHTML = '<div class="text-center">' + HONEST +
+    '<p class="font-bold mb-2">Place la poignée pile sur le trait noir. Prends ton temps, valide quand tu es satisfait·e.</p>' +
+    '<div class="relative"><input id="aln" class="vol" type="range" min="0" max="100" step="1" value="' + start + '" aria-label="Alignement">' +
+    '<div style="position:absolute;left:50%;top:0;bottom:0;width:4px;margin-left:-2px;background:#111;pointer-events:none;z-index:2"></div></div>' +
+    '<div class="flex justify-center gap-3 mt-3"><button id="alnM" class="btn px-6 py-2 text-xl bg-white">−1</button><button id="alnP" class="btn px-6 py-2 text-xl bg-white">+1</button></div>' +
+    '<button id="alnOk" class="btn display text-2xl px-8 py-3 mt-5 w-full bg-[#5FD38D]">✅ Valider</button></div>';
+  const r = $("aln");
+  const upd = () => { r.style.setProperty("--p", r.value + "%"); sfx.blip(+r.value); };
+  r.style.setProperty("--p", start + "%");
+  r.addEventListener("input", upd);
+  $("alnM").onclick = () => { r.value = Math.max(0, +r.value - 1); upd(); };
+  $("alnP").onclick = () => { r.value = Math.min(100, +r.value + 1); upd(); };
+  $("alnOk").onclick = () => {
+    const d = Math.abs(+r.value - 50);
+    const s = d === 0 ? 100 : d === 1 ? 80 : d === 2 ? 60 : d <= 5 ? 35 : 10;
+    finish(s, d === 0 ? "Pile sur le trait : le pixel est à sa place." : "À " + d + " de l'axe : ça passe, mais tu l'as vu.");
+  };
+}
+
+/* =========================================================
+   ÉPREUVES EXPÉRIMENTALES (dessin, timing, rythme)
+   ========================================================= */
+function exRythme(body, finish){
+  const gap = 800, n = 4;
+  body.innerHTML = '<div class="text-center">' + HONEST +
+    '<div id="ryDot" class="mx-auto my-4 w-24 h-24 rounded-full border-[3px] border-black bg-[#FFD93D]" style="transition:transform .15s"></div>' +
+    '<p id="ryInfo" class="font-bold mb-4">Regarde le cercle pulser 4 fois…</p>' +
+    '<button id="ryTap" class="btn display text-2xl px-8 py-5 w-full bg-white" disabled>👆 TAPE ICI</button></div>';
+  const dot = $("ryDot"), btn = $("ryTap");
+  let taps = [], phase = "demo";
+  for (let i=0;i<n;i++) setTimeout(() => { dot.style.transform = "scale(1.35)"; sfx.blip(40); setTimeout(() => dot.style.transform = "", 150); }, i*gap);
+  setTimeout(() => { phase = "play"; btn.disabled = false; const inf = $("ryInfo"); if (inf) inf.textContent = "À toi ! Tape 4 fois au même rythme."; }, n*gap + 300);
+  btn.addEventListener("click", () => {
+    if (phase !== "play") return;
+    taps.push(performance.now()); sfx.pop(taps.length);
+    dot.style.transform = "scale(1.2)"; setTimeout(() => dot.style.transform = "", 100);
+    if (taps.length === n){
+      phase = "done"; let dev = 0;
+      for (let i=1;i<n;i++) dev += Math.abs((taps[i]-taps[i-1]) - gap);
+      dev /= (n-1);
+      const s = dev < 60 ? 100 : dev < 120 ? 75 : dev < 220 ? 45 : 20;
+      finish(s, dev < 60 ? "Métronome humain : ton rythme tombe pile." : "Ton rythme a pris son propre tempo. Il n'y a pas de bon tempo ici.");
+    }
+  });
+}
+
+function exEnvoyer(body, finish){
+  body.innerHTML = '<div class="text-center">' + HONEST +
+    '<div class="card p-4 mb-4 text-left text-sm font-bold">Toi : « Désolé, je n\'ai pas pu répondre avant ! »</div>' +
+    '<p class="font-bold mb-3">Maintiens le bouton Envoyer. Relâche quand tu veux.</p>' +
+    '<button id="sendBtn" class="btn display text-2xl px-8 py-6 w-full bg-[#5FD38D]" style="touch-action:none">📤 ENVOYER</button>' +
+    '<p id="sendInfo" class="mt-3 font-bold">0.0s</p></div>';
+  const b = $("sendBtn"); let t0 = 0, raf = 0, done = false;
+  const tick = () => { if (!t0) return; const inf = $("sendInfo"); if (inf) inf.textContent = ((performance.now()-t0)/1000).toFixed(1) + "s"; raf = requestAnimationFrame(tick); };
+  const down = (e) => { if (done) return; e.preventDefault(); t0 = performance.now(); b.style.transform = "translate(4px,4px)"; sfx.blip(30); tick(); };
+  const up = () => {
+    if (done || !t0) return; done = true; cancelAnimationFrame(raf);
+    const s = (performance.now()-t0)/1000;
+    const sc = s < .5 ? 90 : s < 2 ? 60 : s < 5 ? 35 : 10;
+    const msg = s < .5 ? "Envoyé direct : pas de relecture, respect." : s < 2 ? "Une petite relecture, ça passe." : s < 5 ? "Relu, reformulé, re-relu…" : "Tu as relu 4 fois. Le message est parfait, il est toujours là.";
+    sfx.pop(2); finish(sc, msg + " (" + s.toFixed(1) + "s)");
+  };
+  b.addEventListener("pointerdown", down);
+  b.addEventListener("pointerup", up);
+  b.addEventListener("pointerleave", up);
+  b.addEventListener("pointercancel", up);
+}
+
+function exRing(body, finish){
+  body.innerHTML = '<div class="text-center">' + HONEST +
+    '<div class="relative mx-auto border-[3px] border-black rounded-2xl bg-white" style="width:100%;max-width:280px;height:280px;overflow:hidden">' +
+      '<div class="absolute rounded-full border-[4px] border-[#111]" style="left:50%;top:50%;width:90px;height:90px;margin:-45px 0 0 -45px;background:#FFD93D"></div>' +
+      '<div id="rgRing" class="absolute rounded-full border-[4px] border-[#FF6FA8]" style="left:50%;top:50%;width:260px;height:260px;margin:-130px 0 0 -130px"></div>' +
+    '</div>' +
+    '<p class="font-bold mt-3 mb-3">Tape au moment où l\'anneau rose touche le cercle jaune.</p>' +
+    '<button id="rgBtn" class="btn display text-2xl px-8 py-4 w-full bg-[#5FD38D]">👆 TAPE</button></div>';
+  const ring = $("rgRing"), D = 3000, t0 = performance.now();
+  let done = false, raf = 0;
+  const loop = (now) => {
+    if (done || !$("rgRing")) return;
+    const p = Math.min(1, (now - t0) / D), w = 260 - 170 * p;
+    ring.style.width = w + "px"; ring.style.height = w + "px";
+    ring.style.margin = (-w/2) + "px 0 0 " + (-w/2) + "px";
+    if (p >= 1){ done = true; finish(15, "L'anneau a fini sa course. La patience a ses limites, c'est honnête."); return; }
+    raf = requestAnimationFrame(loop);
+  };
+  raf = requestAnimationFrame(loop);
+  $("rgBtn").onclick = () => {
+    if (done) return; done = true; cancelAnimationFrame(raf);
+    const err = Math.abs((performance.now() - t0) / D - 1) * D;
+    const sc = err < 80 ? 100 : err < 200 ? 75 : err < 500 ? 40 : 15;
+    finish(sc, err < 80 ? "Timing au cordeau : tes réflexes sont en forme." : "Presque ! Ton timing a son propre rythme.");
+  };
+}
+
+function exStop(body, finish){
+  body.innerHTML = '<div class="text-center">' + HONEST +
+    '<p class="font-bold mb-4">Appuie sur STOP quand le curseur passe au centre de la barre.</p>' +
+    '<div id="stopBar" class="relative h-16 border-[3px] border-black rounded-xl bg-white overflow-hidden">' +
+      '<div class="absolute top-0 bottom-0 w-1 bg-[#111]" style="left:50%"></div>' +
+      '<div id="stopCur" class="absolute top-1 bottom-1 w-6 bg-[#FF6FA8] border-[3px] border-black rounded-lg" style="left:0"></div>' +
+    '</div>' +
+    '<button id="stopBtn" class="btn display text-2xl px-8 py-4 mt-5 w-full bg-[#FFD93D]">⏹️ STOP</button></div>';
+  const cur = $("stopCur"), bar = $("stopBar"), t0 = performance.now();
+  let done = false, lastX = 0, raf = 0;
+  const loop = (now) => {
+    if (done || !$("stopCur")) return;
+    const p = ((now - t0) / 1600) % 2, x = p < 1 ? p : 2 - p;
+    lastX = x; cur.style.left = (x * (bar.clientWidth - 24)) + "px";
+    raf = requestAnimationFrame(loop);
+  };
+  raf = requestAnimationFrame(loop);
+  $("stopBtn").onclick = () => {
+    if (done) return; done = true; cancelAnimationFrame(raf);
+    const d = Math.abs(lastX - .5);
+    const s = d < .03 ? 100 : d < .1 ? 75 : d < .25 ? 45 : 20;
+    finish(s, d < .03 ? "Pile au centre : ton œil est un laser." : "Presque au centre. Ton œil a ses petits réglages perso.");
+  };
+}
+
+function exSablier(body, finish){
+  body.innerHTML = '<div class="text-center">' + HONEST +
+    '<p class="font-bold mb-4">Compte 3 secondes dans ta tête, puis appuie. Aucun chrono n\'est affiché.</p>' +
+    '<button id="sabBtn" class="btn display text-2xl px-8 py-6 w-full bg-[#4D96FF] text-white">⏳ J\'ai compté 3 secondes</button></div>';
+  const t0 = performance.now(); let done = false;
+  $("sabBtn").onclick = () => {
+    if (done) return; done = true;
+    const s = (performance.now() - t0) / 1000, e = Math.abs(s - 3);
+    const sc = e < .2 ? 100 : e < .6 ? 70 : e < 1.5 ? 40 : 15;
+    finish(sc, "Tu as mis " + s.toFixed(1) + " s. " + (e < .2 ? "Horloge intérieure de précision suisse." : "Ton horloge intérieure a son propre fuseau horaire."));
+  };
+}
+
+function exLigne(body, finish){
+  body.innerHTML = '<div class="text-center">' + HONEST +
+    '<canvas id="lnC" width="300" height="200" style="touch-action:none;border:3px solid #111;border-radius:16px;background:#FFFBEA;max-width:100%"></canvas>' +
+    '<p class="font-bold mt-2 text-sm">Trace une ligne droite de gauche à droite. Juste ta main, pas de règle.</p>' +
+    '<div class="grid grid-cols-2 gap-3 mt-3"><button id="lnClear" class="btn px-3 py-3 bg-white">🧽 Recommencer</button><button id="lnOk" class="btn px-3 py-3 bg-[#5FD38D]">✅ Valider</button></div></div>';
+  const cv = $("lnC"), ctx = cv.getContext("2d");
+  ctx.lineWidth = 5; ctx.lineCap = "round"; ctx.strokeStyle = "#111";
+  let pts = [], down = false;
+  const pos = (e) => { const r = cv.getBoundingClientRect(); return [(e.clientX-r.left)*cv.width/r.width, (e.clientY-r.top)*cv.height/r.height]; };
+  cv.addEventListener("pointerdown", (e) => { e.preventDefault(); cv.setPointerCapture(e.pointerId); down = true; pts = []; ctx.clearRect(0,0,cv.width,cv.height); const p = pos(e); pts.push(p); ctx.beginPath(); ctx.moveTo(p[0],p[1]); });
+  cv.addEventListener("pointermove", (e) => { if (!down) return; const p = pos(e); pts.push(p); ctx.lineTo(p[0],p[1]); ctx.stroke(); });
+  const up = () => { down = false; };
+  cv.addEventListener("pointerup", up); cv.addEventListener("pointercancel", up);
+  $("lnClear").onclick = () => { pts = []; ctx.clearRect(0,0,cv.width,cv.height); sfx.tick(); };
+  $("lnOk").onclick = () => {
+    if (pts.length < 2) return;
+    const a = pts[0], b = pts[pts.length-1];
+    const dx = b[0]-a[0], dy = b[1]-a[1], L = Math.hypot(dx,dy) || 1;
+    let maxd = 0; pts.forEach(p => { const d = Math.abs(dy*p[0] - dx*p[1] + b[0]*a[1] - b[1]*a[0]) / L; if (d > maxd) maxd = d; });
+    const ratio = maxd / L;
+    const s = ratio < .03 ? 100 : ratio < .07 ? 75 : ratio < .15 ? 45 : 20;
+    finish(s, ratio < .03 ? "Ligne au cordeau : ton trait est une règle vivante." : "Un petit détour de ta main. Et c'est très bien comme ça.");
+  };
+}
+
+/* =========================================================
+   DÉFINITION DES ÉPREUVES (POOL DE 20)
+   (w = poids de chaque épreuve dans les 4 jauges de stats)
+   ========================================================= */
+const POOL = [
+  { badge:"🎮 MINI-JEU",       name:"Le Test du Volume",        title:"Le Test du Volume",
+    instr:"Règle le volume de la voiture sur un niveau acceptable avant de démarrer.", w:{logic:1}, render:ep1 },
+  { badge:"👁️ OBSERVATION",   name:"L'Intrus Visuel",          title:"L'Intrus Visuel",
+    instr:"Vite ! Trouve le carré qui ruine l'alignement avant la fin du chrono (20 secondes) !", w:{details:1}, render:ep2 },
+  { badge:"🥄 CHOIX VISUEL",   name:"Les Petites Cuillères",    title:"Le Test des Petites Cuillères",
+    instr:"Tu dois manger un yaourt. Choisis ta cuillère.", w:{details:1}, render:ep3 },
+  { badge:"🧠 LOGIQUE",        name:"Logique Pure & Motifs",    title:"Logique Pure & Motifs",
+    instr:"Complète la suite logique le plus vite possible.", w:{logic:1}, render:ep4 },
+  { badge:"⚡ RÉFLEXE",        name:"Le Radar d'Évitement",     title:"Le Radar d'Évitement Social",
+    instr:"Quelqu'un que tu connais vaguement marche vers toi sur le trottoir, à 50 mètres. Que fais-tu ?", w:{social:1}, render:ep5 },
+  { badge:"🎮 MINI-JEU",       name:"Le Tri Maniaque",          title:"Le Tri Maniaque",
+    instr:"Glisse chaque cube dans sa case, du plus petit au plus grand, pour calmer ton cerveau.", w:{logic:.5, details:.5}, render:ep6 },
+  { badge:"🎯 FOCUS",          name:"La Mémoire Flash",         title:"La Mémoire Flash",
+    instr:"Mémorise ce code en 2 secondes !", w:{hyperfocus:1}, render:ep7 },
+  { badge:"🎭 MISE EN SITUATION", name:"Le Piège de l'Hyperfixation", title:"Le Piège de l'Hyperfixation",
+    instr:"Il est 2h14 du matin, tu as cours/boulot demain à 8h. Tu tombes sur un article Wikipédia sur l'histoire des sous-marins soviétiques.", w:{hyperfocus:.7, social:.3}, render:ep8 },
+  { badge:"🔊 SENSIBILITÉ",    name:"Le Concert des Bruits",    title:"Le Concert des Bruits",
+    instr:"Écoute ces 3 sons (monte le volume !) puis dis honnêtement ce que ça te fait.", w:{details:1}, render:ep9 },
+  { badge:"✏️ DESSIN",         name:"Le Cercle Parfait",        title:"Le Cercle Parfait",
+    instr:"Dessine le plus beau cercle possible. Aucune limite de temps, aucun juge.", w:{details:.6, logic:.4}, render:ep10 },
+  { badge:"🎯 PRÉCISION",      name:"Pile sur le Trait",        title:"Pile sur le Trait",
+    instr:"Aligne la poignée exactement sur le trait. Pas de chrono, sois toi-même.", w:{details:.5, logic:.5}, render:ep11 },
+  { badge:"🥁 RYTHME", name:"Le Métronome", title:"Le Métronome",
+    instr:"Regarde le cercle pulser 4 fois, puis tape le même rythme.", w:{logic:1}, render:exRythme },
+  { badge:"📤 MESSAGERIE", name:"Le Bouton Envoyer", title:"Le Bouton Envoyer",
+    instr:"Maintiens le bouton Envoyer. Relâche quand tu veux.", w:{social:1}, render:exEnvoyer },
+  { badge:"⏱️ TIMING", name:"Le Cercle Qui Rétrécit", title:"Le Cercle Qui Rétrécit",
+    instr:"Tape au moment exact où l'anneau rose touche le cercle jaune.", w:{logic:.5, social:.5}, render:exRing },
+  { badge:"🚗 ROUTINE",        name:"Le Trajet Habituel",       title:"Le Trajet Habituel",
+    instr:"Tu dois aller quelque part que tu connais. Comment tu t'y prends ?", w:{logic:1}, render:ep15 },
+  { badge:"🎯 PRÉCISION", name:"Stop au Centre", title:"Stop au Centre",
+    instr:"Appuie sur STOP quand le curseur passe au centre de la barre.", w:{details:.5, logic:.5}, render:exStop },
+  { badge:"⏳ TEMPS", name:"Le Sablier", title:"Le Sablier",
+    instr:"Compte 3 secondes dans ta tête, puis appuie. Sans chrono visible.", w:{logic:1}, render:exSablier },
+  { badge:"🧲 PASSION",        name:"Ma Nouvelle Obsession",    title:"Ma Nouvelle Obsession",
+    instr:"Tu découvres un sujet qui te passionne (insectes, trains, jeux, peu importe). Comment tu réagis ?", w:{hyperfocus:1}, render:ep18 },
+  { badge:"🧥 SENSIBILITÉ",    name:"Le Pull Qui Gratte",       title:"Le Pull Qui Gratte",
+    instr:"Parlons textures et vêtements. Lequel te ressemble le plus ?", w:{details:1}, render:ep19 },
+  { badge:"✏️ DESSIN", name:"La Ligne Droite", title:"La Ligne Droite",
+    instr:"Trace une ligne droite. Pas de règle, juste ta main.", w:{details:.6, logic:.4}, render:exLigne }
+
+];
+let EPREUVES = [];
+// tire 8 épreuves au hasard dans le pool de 20, en s'assurant que les 4 jauges sont couvertes
+function drawEpreuves(){
+  const need = ["hyperfocus","details","social","logic"];
+  let best = null;
+  for (let n=0;n<100;n++){
+    const sel = shuffle(POOL).slice(0,8);
+    if (!best) best = sel;
+    if (need.every(k => sel.reduce((a,e) => a + (e.w[k]||0), 0) >= 1)){ best = sel; break; }
+  }
+  EPREUVES = best;
+}
+
+
+const STATS = [
+  { key:"hyperfocus", label:"Hyperfixation Wikipédia",          emoji:"🧠", color:"#FF6FA8" },
+  { key:"details",    label:"Intolérance aux bruits / détails", emoji:"🔊", color:"#4D96FF" },
+  { key:"social",     label:"Batterie sociale en PLS",           emoji:"🔋", color:"#FFD93D" },
+  { key:"logic",      label:"Rigidité des habitudes",            emoji:"📐", color:"#5FD38D" }
+];
+
+const TIERS = [
+  { max:20,  emoji:"🧍", title:"PNJ Certifié Standard", color:"#4D96FF",
+    desc:"Tout glisse chez toi, la vie est fluide. Tu es la preuve vivante que « ça va » existe. On t'envie un peu, pas gêné." },
+  { max:50,  emoji:"🕵️", title:"Suspect mais Discret", color:"#FFD93D",
+    desc:"Quelques manies bien planquées et deux-trois obsessions de salon. Personne se doute de rien… sauf toi, qui sais très bien pour la cuillère." },
+  { max:80,  emoji:"🏛️", title:"Architecte de Wikipédia", color:"#FF6FA8",
+    desc:"Tu construis des cathédrales de savoir inutile à 2h du mat'. Ton cerveau a des onglets ouverts depuis 2019, et c'est ça qui fait ton charme." },
+  { max:100, emoji:"👑", title:"Grand Maître de l'Hyperfocus", color:"#A66BFF",
+    desc:"Quand tu t'intéresses à un sujet, l'univers s'écarte. Tu as des systèmes, des règles et des avis sur tout. Respect éternel, et pense à boire de l'eau." }
+];
+
+/* =========================================================
+   TRANSITIONS D'ÉCRAN
+   ========================================================= */
+function show(id, silent){
+  const cur = document.querySelector(".screen.active"), next = $(id);
+  if (!silent) sfx.whoosh();
+  $("actionBar").classList.remove("on");
+  const enter = () => {
+    next.classList.add("active","enter");
+    setTimeout(() => next.classList.remove("enter"), 520);
+    window.scrollTo({top:0, behavior:"smooth"});
+  };
+  if (cur && cur !== next){
+    cur.classList.add("leave");
+    setTimeout(() => { cur.classList.remove("active","leave"); enter(); }, 250);
+  } else enter();
+}
+
+$("muteBtn").addEventListener("click", () => {
+  muted = !muted;
+  $("muteBtn").textContent = muted ? "🔇" : "🔊";
+  if (!muted) { audio(); sfx.pop(1); }
+});
+
+/* =========================================================
+   PROGRESSION & COMPTEUR EN DIRECT
+   ========================================================= */
+function setProgress(done){
+  const pct = Math.round(done / EPREUVES.length * 100);
+  const bar = $("progressBar");
+  bar.style.width = pct + "%";
+  const hue = 340 - pct * 2.1;
+  bar.style.backgroundColor = "hsl(" + hue + " 95% 58%)";
+  bar.style.boxShadow = "0 0 " + (8 + pct/5) + "px hsl(" + hue + " 100% 60%)";
+}
+const avg = () => scores.length ? Math.round(scores.reduce((a,b) => a + b, 0) / scores.length) : 0;
+function updateMeter(){
+  const chip = $("meterChip");
+  chip.style.display = scores.length ? "inline-flex" : "none";
+  $("meterNum").textContent = avg() + "%";
+  chip.animate([{transform:"scale(1.4) rotate(-6deg)"},{transform:"scale(1) rotate(0)"}], {duration:300, easing:"cubic-bezier(.3,1.6,.5,1)"});
+}
+
+/* =========================================================
+   LANCEMENT & DÉROULÉ
+   ========================================================= */
+function startGame(){
+  audio();
+  scores = []; epIndex = 0; drawEpreuves();
+  $("progressWrap").classList.add("on");
+  $("meterChip").style.display = "none";
+  setProgress(0);
+  runEpreuve(0, true);
+  show("play");
+}
+
+function runEpreuve(i, first){
+  epIndex = i; epToken++;
+  const token = epToken, ep = EPREUVES[i];
+  let done = false;
+  $("epStep").textContent = "ÉPREUVE " + (i+1) + "/" + EPREUVES.length;
+  $("epBadge").textContent = ep.badge;
+  $("epTitle").textContent = ep.title;
+  $("epInstr").textContent = ep.instr;
+  $("epBody").innerHTML = "";
+  const card = $("epCard");
+  card.classList.remove("qcard-in"); void card.offsetWidth; card.classList.add("qcard-in");
+  if (!first){ sfx.whoosh(); window.scrollTo({top:0, behavior:"smooth"}); }
+
+  keyHandler = (e) => {
+    const n = parseInt(e.key, 10);
+    if (n >= 1 && n <= 4){ const b = document.querySelectorAll("#epBody .pick")[n-1]; if (b) b.click(); }
+  };
+
+  const finish = (score, msg) => {
+    if (done || token !== epToken) return;
+    done = true; epToken++; keyHandler = null;
+    scores[i] = score;
+    setProgress(i + 1); updateMeter();
+    feedback(score, msg, () => {
+      if (i + 1 < EPREUVES.length) runEpreuve(i + 1);
+      else runAnalysis();
+    });
+  };
+  ep.render($("epBody"), finish);
+}
+
+function feedback(score, msg, cb){
+  const gain = score / 100 * (100 / EPREUVES.length);
+  const gainTxt = "+" + gain.toFixed(1).replace(".", ",").replace(",0", "") + "%";
+  const [emoji, title, color] =
+    score >= 85 ? ["🔥", "TROP RELATABLE !", "#5FD38D"] :
+    score >= 60 ? ["😏", "ÇA SENT LE VÉCU", "#FFD93D"] :
+    score >= 30 ? ["🙂", "PETITE MANIE", "#4D96FF"] :
+    score >= 1  ? ["😌", "TRÈS CHILL", "#FF9F45"] :
+                  ["🧍", "PNJ DÉTECTÉ !", "#FF6FA8"];
+  $("fbCard").style.background = color;
+  $("fbCard").innerHTML =
+    '<div class="text-6xl mb-1">' + emoji + '</div>' +
+    '<div class="display" style="font-size:clamp(2.2rem,11vw,3.6rem);line-height:1.05">' + title + '</div>' +
+    '<div class="display mt-1" style="font-size:clamp(2rem,10vw,3rem);-webkit-text-stroke:2px #111;color:#fff;text-shadow:3px 3px 0 #111">' + gainTxt + '</div>' +
+    '<p class="font-bold mt-3 text-base sm:text-lg">' + msg + '</p>' +
+    '<p class="text-xs mt-3 opacity-60">Touche pour continuer</p>';
+  const fb = $("fb");
+  fb.classList.add("on");
+  sfx.win(score); if (score === 0) setTimeout(() => sfx.bonk(), 200);
+  let gone = false;
+  const go = () => { if (gone) return; gone = true; fb.classList.remove("on"); fb.onclick = null; cb(); };
+  fb.onclick = go;
+  setTimeout(go, msg.length > 70 ? 2800 : 2200);
+}
+
+/* =========================================================
+   FAUX ÉCRAN D'ANALYSE (3,5 s)
+   ========================================================= */
+const LOAD_MSGS = [
+  "Analyse du volume sonore préféré…",
+  "Mesure du temps de réaction face au carré tordu…",
+  "Calibrage de la tolérance aux petites cuillères…",
+  "Calcul du taux d'évitement des gens dans la rue…",
+  "Comptage des onglets Wikipédia ouverts…",
+  "Compilation des hyperfixations de 2019 à aujourd'hui…"
+];
+function runAnalysis(){
+  $("progressWrap").classList.remove("on");
+  $("meterChip").style.display = "none";
+  show("loading");
+  const DURATION = 3500;
+  setTimeout(() => sfx.rise(3.5), 300);
+  const start = performance.now() + 350;
+  let msgI = -1;
+  const msgEl = $("loadMsg");
+  const loop = (now) => {
+    const t = Math.max(0, Math.min(1, (now - start) / DURATION));
+    const eased = t < .5 ? 2*t*t : 1 - Math.pow(-2*t + 2, 2)/2;
+    const pct = Math.round(eased * 100);
+    $("gauge").style.width = pct + "%";
+    $("loadPct").textContent = pct + "%";
+    const mi = Math.min(LOAD_MSGS.length - 1, Math.floor(t * LOAD_MSGS.length));
+    if (mi !== msgI){ msgI = mi; msgEl.textContent = LOAD_MSGS[mi]; msgEl.animate([{opacity:0, transform:"translateY(10px)"},{opacity:1, transform:"none"}], {duration:220}); }
+    if (t < 1) requestAnimationFrame(loop);
+    else setTimeout(showResult, 250);
+  };
+  requestAnimationFrame(loop);
+}
+
+/* =========================================================
+   RÉSULTAT
+   ========================================================= */
+let lastPct = 0, lastTier = null, lastStats = null, lastBest = "";
+function computeResults(){
+  const pct = avg();
+  const stats = STATS.map(s => {
+    let n = 0, d = 0;
+    EPREUVES.forEach((e, i) => { const w = e.w[s.key] || 0; n += (scores[i] || 0) * w; d += w; });
+    return { ...s, pct: d ? Math.round(n / d) : 0 };
+  });
+  const tier = TIERS.find(t => pct <= t.max) || TIERS[TIERS.length-1];
+  let best = 0; scores.forEach((s, i) => { if (s > scores[best]) best = i; });
+  return { pct, stats, tier, best };
+}
+
+function showResult(){
+  const { pct, stats, tier, best } = computeResults();
+  lastPct = pct; lastTier = tier; lastStats = stats;
+  lastBest = EPREUVES[best].name + " (" + scores[best] + "%)";
+
+  $("bigPct").textContent = "0%";
+  $("rankEmoji").textContent = tier.emoji;
+  $("rankTitle").textContent = tier.title;
+  $("rankBox").style.background = tier.color;
+  $("rankDesc").textContent = tier.desc;
+  $("bestRes").textContent = "🏆 Épreuve la plus marquante : " + lastBest;
+
+  $("stats").innerHTML = stats.map(s =>
+    '<div class="wiggle">' +
+      '<div class="flex items-baseline justify-between gap-2 mb-1">' +
+        '<span class="font-bold text-sm sm:text-base">' + s.emoji + ' ' + s.label + '</span>' +
+        '<span class="display text-lg" data-statpct="' + s.key + '">0%</span>' +
+      '</div>' +
+      '<div class="statbar"><div class="statfill" data-fill="' + s.key + '" style="background-color:' + s.color + '"></div></div>' +
+    '</div>').join("");
+
+  show("result", true);
+  setTimeout(() => $("actionBar").classList.add("on"), 400);
+  sfx.fanfare();
+  launchConfetti();
+
+  const dur = 2400, t0 = performance.now();
+  let lastTick = 0;
+  const step = (now) => {
+    const t = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - t, 4);
+    const v = Math.round(pct * e);
+    $("bigPct").textContent = v + "%";
+    if (v - lastTick >= 4){ lastTick = v; sfx.tick(); }
+    if (t < 1) requestAnimationFrame(step);
+    else { $("bigPct").animate([{transform:"scale(1.18)"},{transform:"scale(1)"}], {duration:400, easing:"cubic-bezier(.3,1.6,.5,1)"}); }
+  };
+  requestAnimationFrame(step);
+
+  stats.forEach((s, i) => {
+    setTimeout(() => {
+      const f = document.querySelector('[data-fill="' + s.key + '"]');
+      f.classList.toggle("zero", s.pct === 0);
+      f.style.width = s.pct + "%";
+      const label = document.querySelector('[data-statpct="' + s.key + '"]');
+      const t0s = performance.now();
+      const run = (now) => { const t = Math.min(1,(now - t0s)/1400), e = 1 - Math.pow(1 - t, 3); label.textContent = Math.round(s.pct * e) + "%"; if (t < 1) requestAnimationFrame(run); };
+      requestAnimationFrame(run);
+      sfx.pop(i);
+    }, 700 + i * 350);
+  });
+}
+
+function launchConfetti(){
+  if (typeof confetti !== "function") return;
+  const colors = ["#FF6FA8","#FFD93D","#4D96FF","#5FD38D","#A66BFF","#FF9F45"];
+  confetti({ particleCount:140, spread:100, origin:{ y:.55 }, colors });
+  const end = Date.now() + 2000;
+  (function frame(){
+    confetti({ particleCount:5, angle:60,  spread:60, origin:{ x:0, y:.7 }, colors });
+    confetti({ particleCount:5, angle:120, spread:60, origin:{ x:1, y:.7 }, colors });
+    if (Date.now() < end) requestAnimationFrame(frame);
+  })();
+}
+
+/* =========================================================
+   COPIER LE SCORE
+   ========================================================= */
+function bar(p){ const n = Math.round(p / 10); return "█".repeat(n) + "░".repeat(10 - n); }
+function buildSummary(){
+  const lines = [
+    "🧠 J'ai fait le test, je suis autiste à " + lastPct + "% (" + lastTier.title + ") " + lastTier.emoji,
+    "",
+    ...lastStats.map(s => s.emoji + " " + s.label + "\n" + bar(s.pct) + " " + s.pct + "%"),
+    "",
+    "🏆 Épreuve la plus marquante : " + lastBest,
+    "",
+    "Et toi, t'es à combien ? 👀"
+  ];
+  return lines.join("\n");
+}
+async function copyText(text){
+  try { await navigator.clipboard.writeText(text); return true; }
+  catch (e) {
+    const ta = document.createElement("textarea");
+    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    let ok = false; try { ok = document.execCommand("copy"); } catch (_) {}
+    ta.remove(); return ok;
+  }
+}
+let toastT;
+async function copyResult(){
+  const ok = await copyText(buildSummary());
+  const t = $("toast");
+  t.textContent = ok ? "Copié ! ✅" : "Impossible de copier 😕";
+  t.classList.add("on"); sfx.pop(3);
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("on"), 1900);
+  if (ok && typeof confetti === "function") confetti({ particleCount:40, spread:60, origin:{ y:.85 } });
+}
+
+/* =========================================================
+   INIT & ÉVÉNEMENTS
+   ========================================================= */
+$("startBtn").addEventListener("click", startGame);
+$("copyBtn").addEventListener("click", copyResult);
+$("replayBtn").addEventListener("click", () => { audio(); sfx.pop(2); show("intro"); });
+
+document.addEventListener("keydown", (e) => { if (keyHandler) keyHandler(e); });
+
+const cur = $("cursor");
+window.addEventListener("mousemove", (e) => { cur.style.transform = "translate(" + e.clientX + "px," + e.clientY + "px)"; });
+window.addEventListener("mouseover", (e) => { cur.classList.toggle("big", !!e.target.closest("button")); });
+</script>
+</body>
+</html>
