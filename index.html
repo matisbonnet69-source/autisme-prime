@@ -231,18 +231,16 @@
 <!-- feedback plein écran -->
 <div id="fb"><div id="fbCard" class="card"></div></div>
 
-<main class="relative z-10 mx-auto w-full max-w-xl px-4 pt-24 pb-16">
-
-  <!-- ========== INTRO ========== -->
+<!-- ========== INTRO ========== -->
   <section id="intro" class="screen active">
     <div class="card p-6 sm:p-8 text-center">
       <div class="bob text-7xl mb-2 inline-block">🧠</div>
-      <p class="inline-block px-3 py-1 mb-3 text-xs font-bold border-[3px] border-black rounded-full bg-[#FFD93D] -rotate-2">8 ÉPREUVES • 5 MIN • 0% SÉRIEUX</p>
+      <p class="inline-block px-3 py-1 mb-3 text-xs font-bold border-[3px] border-black rounded-full bg-[#FFD93D] -rotate-2">8 ÉPREUVES AU HASARD (SUR 20) • 0% SÉRIEUX</p>
       <h1 class="display text-4xl sm:text-5xl leading-tight mb-4">Test : À quel <span class="inline-block px-2 border-[3px] border-black bg-[#FF6FA8] text-white -rotate-2 rounded-lg">%</span> es-tu autiste&nbsp;?</h1>
       <p class="text-lg font-bold mb-4">Le test ultime (et 0% scientifique) pour évaluer tes petites manies et tes hyperfixations entre potes.</p>
       <p class="text-3xl mb-6 tracking-widest">🔊 👁️ 🥄 🧩 🚶 📊 🔢 📚</p>
       <button id="startBtn" class="btn display text-2xl px-8 py-4 w-full sm:w-auto bg-[#5FD38D]">🚀 Lancer le test</button>
-      <p class="mt-5 text-xs opacity-70">Mini-jeux, réflexes, logique, mises en situation : sois rapide et sincère. C'est pour rigoler, ce n'est pas un test médical et ça ne remplace aucun diagnostic. 💛</p>
+      <p class="mt-5 text-xs opacity-70">Mini-jeux, réflexes, logique, mises en situation : sois sincère : il n'y a ni bonne ni mauvaise réponse, et chaque partie tire de nouvelles épreuves dans un ordre différent. C'est pour rigoler, ce n'est pas un test médical et ça ne remplace aucun diagnostic. 💛</p>
     </div>
   </section>
 
@@ -396,10 +394,11 @@ function timerHTML(){
   return '<div class="flex items-center gap-3 mb-4"><div class="statbar flex-1"><div id="tbar" class="tfill"></div></div><span id="tlabel" class="display text-xl w-16 text-right">0.0s</span></div>';
 }
 function tickBar(left, total){
+  if (!$("tbar")) return;
   const r = left / total;
   $("tbar").style.width = (r*100) + "%";
   $("tbar").style.backgroundColor = "hsl(" + Math.round(r*120) + " 90% 55%)";
-  $("tlabel").textContent = (left/1000).toFixed(1) + "s";
+  if ($("tlabel")) $("tlabel").textContent = (left/1000).toFixed(1) + "s";
 }
 function answerButtons(items, onPick){
   const letters = ["A","B","C","D"];
@@ -523,9 +522,9 @@ function ep4(body, finish){
       b.classList.add("picked");
       const s = t <= 15 ? 100 : Math.round(100 - (t - 15) / 25 * 40);
       finish(s, t <= 15 ? "Réponse en " + t.toFixed(1) + "s : cerveau en mode tableur ! (" + p.rule + ")"
-                       : "Bonne réponse en " + t.toFixed(1) + "s. Le motif était : " + p.rule);
+                       : "Trouvé en " + t.toFixed(1) + "s. Le motif était : " + p.rule);
     } else {
-      sfx.bonk(); finish(10, "Raté ! La logique était : " + p.rule);
+      sfx.bonk(); finish(10, "Pas celle-là. La logique était : " + p.rule);
     }
   }));
   countdown(total, (l) => tickBar(l, total), () => {
@@ -552,23 +551,27 @@ function ep5(body, finish){
     if (over) return; over = true;
     const a = acts[+b.dataset.i]; b.classList.add("picked"); finish(a.s, a.m);
   }));
-  countdown(total, (l) => { tickBar(l, total); $("dist").textContent = Math.ceil(50 * l / total) + " m"; }, () => {
+  countdown(total, (l) => { tickBar(l, total); if ($("dist")) $("dist").textContent = Math.ceil(50 * l / total) + " m"; }, () => {
     if (over) return; over = true;
     finish(60, "Figé comme un cerf devant des phares : la stratégie « statue » est reconnue.");
   });
 }
 
-/* ---------- ÉPREUVE 6 : le tri maniaque (version claire) ---------- */
+/* ---------- ÉPREUVE : le tri maniaque (glisser-déposer + tuto) ---------- */
 function ep6(body, finish){
-  const total = 25000, sizes = [26, 40, 54, 68, 82];
+  const total = 15000, sizes = [28, 42, 56, 70, 84];
   const order = shuffle([0,1,2,3,4]);
   body.innerHTML = timerHTML() +
-    '<p class="text-center font-bold mb-2">1️⃣ Clique les carrés <u>du plus PETIT au plus GRAND</u></p>' +
-    '<div id="pool" class="flex items-end justify-center gap-2 py-3 px-2 border-[3px] border-black rounded-xl bg-[#FFFBEA]" style="min-height:112px"></div>' +
-    '<p class="text-center font-bold mt-4 mb-2">2️⃣ Ton rangement</p>' +
-    '<div class="flex items-center justify-center gap-1 text-xs font-bold mb-1"><span>🔹 PETIT</span><span class="flex-1 text-center">─────────────▶</span><span>GRAND 🔷</span></div>' +
-    '<div id="slots6" class="flex items-end justify-center gap-2 py-2 px-2 border-[3px] border-dashed border-black rounded-xl" style="min-height:102px"></div>' +
-    '<p id="sortInfo" class="text-center font-bold mt-3">0/5 rangés</p>';
+    '<p id="triHint" class="text-center font-bold mb-3">👆 Glisse les cubes dans leur case, du plus petit au plus grand</p>' +
+    '<div id="triArea" class="relative" style="touch-action:none">' +
+      '<div id="pool" class="flex items-end justify-center gap-2 py-3 px-2 border-[3px] border-black rounded-xl bg-[#FFFBEA]" style="min-height:112px"></div>' +
+      '<div class="flex items-center justify-center gap-1 text-xs font-bold mt-4 mb-1"><span>🔹 PETIT</span><span class="flex-1 text-center">─────────────▶</span><span>GRAND 🔷</span></div>' +
+      '<div id="slots6" class="flex items-end justify-center gap-2 py-2 px-2 border-[3px] border-dashed border-black rounded-xl" style="min-height:102px"></div>' +
+      '<div id="finger" style="position:absolute;left:0;top:0;font-size:2.4rem;pointer-events:none;z-index:30;display:none">👆</div>' +
+    '</div>' +
+    '<p id="sortInfo" class="text-center font-bold mt-3">0/5 rangés</p>' +
+    '<div id="skipBox" class="text-center mt-2"></div>';
+  tickBar(total, total);
   for (let i=0;i<5;i++){
     const sl = document.createElement("div");
     sl.id = "sl" + i;
@@ -576,35 +579,104 @@ function ep6(body, finish){
     sl.textContent = i + 1;
     $("slots6").appendChild(sl);
   }
-  let next = 0, errors = 0, over = false; const t0 = performance.now();
+  let next = 0, errors = 0, over = false, started = false, tStart = 0, drag = null;
+  const cubes = {};
+  const area = $("triArea"), finger = $("finger");
+  let demoAnims = [];
+
+  function stopDemo(){ demoAnims.forEach(a => a.cancel()); demoAnims = []; finger.style.display = "none"; }
+  function startDemo(){
+    if (started || over) return;
+    stopDemo();
+    const c = cubes[0], s = $("sl0");
+    if (!c || !s || c.style.visibility === "hidden") return;
+    const ar = area.getBoundingClientRect(), cr = c.getBoundingClientRect(), sr = s.getBoundingClientRect();
+    const dx = (sr.left + sr.width/2) - (cr.left + cr.width/2), dy = (sr.top + sr.height/2) - (cr.top + cr.height/2);
+    const fx = cr.left - ar.left + cr.width/2 - 14, fy = cr.top - ar.top + cr.height/2 - 6;
+    finger.style.display = "block";
+    const opt = { duration: 2200, iterations: Infinity, easing: "ease-in-out" };
+    demoAnims.push(finger.animate([
+      { transform: "translate(" + fx + "px," + (fy + 12) + "px) scale(1.15)", opacity: 0, offset: 0 },
+      { transform: "translate(" + fx + "px," + fy + "px) scale(1)", opacity: 1, offset: .12 },
+      { transform: "translate(" + fx + "px," + fy + "px) scale(.92)", opacity: 1, offset: .22 },
+      { transform: "translate(" + (fx + dx) + "px," + (fy + dy) + "px) scale(.92)", opacity: 1, offset: .7 },
+      { transform: "translate(" + (fx + dx) + "px," + (fy + dy) + "px) scale(1)", opacity: 1, offset: .8 },
+      { transform: "translate(" + (fx + dx) + "px," + (fy + dy - 14) + "px) scale(1)", opacity: 0, offset: 1 }
+    ], opt));
+    demoAnims.push(c.animate([
+      { transform: "translate(0,0)", offset: 0 },
+      { transform: "translate(0,0)", offset: .22 },
+      { transform: "translate(" + dx + "px," + dy + "px)", offset: .7 },
+      { transform: "translate(" + dx + "px," + dy + "px)", offset: .85 },
+      { transform: "translate(0,0)", offset: 1 }
+    ], opt));
+  }
+
+  function place(b, k){
+    b.style.visibility = "hidden"; b.disabled = true;
+    const sl = $("sl" + k);
+    sl.style.cssText += ";border:3px solid #111;background:#5FD38D;color:#111;box-shadow:3px 3px 0 #111";
+    sfx.pop(next); next++;
+    if ($("sortInfo")) $("sortInfo").textContent = next + "/5 rangés";
+    if (!started){
+      started = true; stopDemo(); tStart = performance.now();
+      if ($("triHint")) $("triHint").innerHTML = "⏱️ Compris ! Il te reste <b>15 secondes</b> pour les 4 autres";
+      countdown(total, (l) => tickBar(l, total), () => {
+        if (over) return; over = true;
+        finish(Math.round(next / 5 * 60), next + "/5 rangés : le chrono a gagné cette manche.");
+      });
+    }
+    if (next === 5){
+      over = true; const t = (performance.now() - tStart) / 1000;
+      const s = clamp(Math.round(100 - errors * 12 - Math.max(0, (t - 8) / 7 * 25)), 25, 100);
+      finish(s, errors === 0 ? "Tout rangé, sans une erreur : l'ordre est rétabli." : "Rangé avec " + errors + " hésitation(s). Le désordre a été vaincu.");
+    }
+  }
+
   order.forEach((k) => {
     const b = document.createElement("button");
     b.className = "blk"; b.style.width = sizes[k] + "px"; b.style.height = sizes[k] + "px"; b.style.background = "#4D96FF";
-    b.setAttribute("aria-label", "carré");
-    b.addEventListener("click", () => {
-      if (over) return;
-      if (k === next){
-        b.style.visibility = "hidden"; b.disabled = true;
-        const sl = $("sl" + next);
-        sl.style.cssText += ";border:3px solid #111;background:#5FD38D;color:#111;box-shadow:3px 3px 0 #111";
-        sfx.pop(next); next++;
-        $("sortInfo").textContent = next + "/5 rangés";
-        if (next === 5){
-          over = true; const t = (performance.now() - t0) / 1000;
-          const pen = t > 14 ? (t - 14) / 11 * 30 : 0;
-          const s = clamp(Math.round(100 - errors * 18 - pen), 25, 100);
-          finish(s, errors === 0 ? "Rangé en " + t.toFixed(1) + "s sans une faute : cerveau apaisé." : "Rangé en " + t.toFixed(1) + "s avec " + errors + " erreur(s). Ça gratte, mais c'est fait.");
-        }
-      } else {
-        errors++; sfx.bonk(); b.classList.remove("shake"); void b.offsetWidth; b.classList.add("shake");
-      }
+    b.style.touchAction = "none"; b.style.position = "relative";
+    b.setAttribute("aria-label", "cube");
+    cubes[k] = b;
+    b.addEventListener("pointerdown", (e) => {
+      if (over || b.disabled) return;
+      e.preventDefault(); b.setPointerCapture(e.pointerId);
+      stopDemo();
+      drag = { b, k, x: e.clientX, y: e.clientY };
+      b.style.transition = "none"; b.style.zIndex = 20;
     });
+    b.addEventListener("pointermove", (e) => {
+      if (!drag || drag.b !== b) return;
+      b.style.transform = "translate(" + (e.clientX - drag.x) + "px," + (e.clientY - drag.y) + "px) scale(1.12)";
+    });
+    const drop = () => {
+      if (!drag || drag.b !== b) return;
+      const r = b.getBoundingClientRect(), cx = r.left + r.width/2, cy = r.top + r.height/2;
+      let hit = -1;
+      for (let i=0;i<5;i++){
+        const sr = $("sl" + i).getBoundingClientRect(), m = 16;
+        if (cx > sr.left - m && cx < sr.right + m && cy > sr.top - m && cy < sr.bottom + m){ hit = i; break; }
+      }
+      drag = null; b.style.zIndex = "";
+      b.style.transition = "transform .25s cubic-bezier(.3,1.6,.5,1)"; b.style.transform = "";
+      if (hit === k){ b.style.transform = ""; place(b, k); }
+      else {
+        if (hit >= 0){ errors++; sfx.bonk(); b.classList.remove("shake"); void b.offsetWidth; b.classList.add("shake"); }
+        later(startDemo, 400);
+      }
+    };
+    b.addEventListener("pointerup", drop);
+    b.addEventListener("pointercancel", drop);
     $("pool").appendChild(b);
   });
-  countdown(total, (l) => tickBar(l, total), () => {
-    if (over) return; over = true;
-    finish(Math.round(next / 5 * 40), next + "/5 rangés : le désordre t'a eu, ton cerveau est en surchauffe.");
-  });
+
+  later(startDemo, 500);
+  later(() => {
+    if (started || over) return;
+    $("skipBox").innerHTML = '<button id="skipTri" class="btn px-4 py-2 text-sm bg-white">Passer cette épreuve ⏭️</button>';
+    $("skipTri").onclick = () => { if (over) return; over = true; stopDemo(); finish(20, "Épreuve passée : tant pis pour les cubes."); };
+  }, 40000);
 }
 
 /* ---------- ÉPREUVE 7 : mémoire flash ---------- */
@@ -660,320 +732,22 @@ function ep8(body, finish){
 }
 
 /* =========================================================
-   DÉFINITION DES 8 ÉPREUVES
-   (w = poids de chaque épreuve dans les 4 jauges de stats)
+   NOUVELLES ÉPREUVES (9 à 20)
    ========================================================= */
-const EPREUVES = [
-  { badge:"🎮 MINI-JEU",       name:"Le Test du Volume",        title:"Le Test du Volume",
-    instr:"Règle le volume de la voiture sur un niveau acceptable avant de démarrer.", w:{logic:1}, render:ep1 },
-  { badge:"👁️ OBSERVATION",   name:"L'Intrus Visuel",          title:"L'Intrus Visuel",
-    instr:"Vite ! Trouve le carré qui ruine l'alignement avant la fin du chrono (20 secondes) !", w:{details:1}, render:ep2 },
-  { badge:"🥄 CHOIX VISUEL",   name:"Les Petites Cuillères",    title:"Le Test des Petites Cuillères",
-    instr:"Tu dois manger un yaourt. Choisis ta cuillère.", w:{details:1}, render:ep3 },
-  { badge:"🧠 LOGIQUE",        name:"Logique Pure & Motifs",    title:"Logique Pure & Motifs",
-    instr:"Complète la suite logique le plus vite possible.", w:{logic:1}, render:ep4 },
-  { badge:"⚡ RÉFLEXE",        name:"Le Radar d'Évitement",     title:"Le Radar d'Évitement Social",
-    instr:"Quelqu'un que tu connais vaguement marche vers toi sur le trottoir, à 50 mètres. Que fais-tu ?", w:{social:1}, render:ep5 },
-  { badge:"🎮 MINI-JEU",       name:"Le Tri Maniaque",          title:"Le Tri Maniaque",
-    instr:"Remets ces 5 carrés du plus petit au plus grand pour calmer ton cerveau. Tu as 25 secondes !", w:{logic:.5, details:.5}, render:ep6 },
-  { badge:"🎯 FOCUS",          name:"La Mémoire Flash",         title:"La Mémoire Flash",
-    instr:"Mémorise ce code en 2 secondes !", w:{hyperfocus:1}, render:ep7 },
-  { badge:"🎭 MISE EN SITUATION", name:"Le Piège de l'Hyperfixation", title:"Le Piège de l'Hyperfixation",
-    instr:"Il est 2h14 du matin, tu as cours/boulot demain à 8h. Tu tombes sur un article Wikipédia sur l'histoire des sous-marins soviétiques.", w:{hyperfocus:.7, social:.3}, render:ep8 }
-];
+const HONEST = '<p class="text-center text-xs font-bold opacity-70 mb-4">🤝 Pas de bonne ou de mauvaise réponse : sois honnête, c\'est ça qui compte.</p>';
 
-const STATS = [
-  { key:"hyperfocus", label:"Hyperfixation Wikipédia",          emoji:"🧠", color:"#FF6FA8" },
-  { key:"details",    label:"Intolérance aux bruits / détails", emoji:"🔊", color:"#4D96FF" },
-  { key:"social",     label:"Batterie sociale en PLS",           emoji:"🔋", color:"#FFD93D" },
-  { key:"logic",      label:"Rigidité des habitudes",            emoji:"📐", color:"#5FD38D" }
-];
-
-const TIERS = [
-  { max:20,  emoji:"🧍", title:"PNJ Certifié Standard", color:"#4D96FF",
-    desc:"Tout glisse chez toi, la vie est fluide. Tu es la preuve vivante que « ça va » existe. On t'envie un peu, pas gêné." },
-  { max:50,  emoji:"🕵️", title:"Suspect mais Discret", color:"#FFD93D",
-    desc:"Quelques manies bien planquées et deux-trois obsessions de salon. Personne se doute de rien… sauf toi, qui sais très bien pour la cuillère." },
-  { max:80,  emoji:"🏛️", title:"Architecte de Wikipédia", color:"#FF6FA8",
-    desc:"Tu construis des cathédrales de savoir inutile à 2h du mat'. Ton cerveau a des onglets ouverts depuis 2019, et c'est ça qui fait ton charme." },
-  { max:100, emoji:"👑", title:"Grand Maître de l'Hyperfocus", color:"#A66BFF",
-    desc:"Quand tu t'intéresses à un sujet, l'univers s'écarte. Tu as des systèmes, des règles et des avis sur tout. Respect éternel, et pense à boire de l'eau." }
-];
-
-/* =========================================================
-   TRANSITIONS D'ÉCRAN
-   ========================================================= */
-function show(id, silent){
-  const cur = document.querySelector(".screen.active"), next = $(id);
-  if (!silent) sfx.whoosh();
-  $("actionBar").classList.remove("on");
-  const enter = () => {
-    next.classList.add("active","enter");
-    setTimeout(() => next.classList.remove("enter"), 520);
-    window.scrollTo({top:0, behavior:"smooth"});
+// épreuve à choix générique : opts = [[texte, score, réaction], ...]
+function choiceEp(cfg){
+  return (body, finish) => {
+    const items = shuffle(cfg.opts.map(o => ({ t:o[0], s:o[1], m:o[2] })));
+    let snd = "";
+    if (cfg.sounds) snd = '<div class="flex flex-wrap justify-center gap-2 mb-4">' + cfg.sounds.map((s,i) =>
+      '<button class="btn px-3 py-2 text-sm bg-[#FFD93D] sndbtn" data-i="' + i + '">▶️ ' + s.label + '</button>').join("") + '</div>';
+    body.innerHTML = '<div class="text-5xl text-center mb-2">' + cfg.emoji + '</div>' + HONEST + snd +
+      '<div class="space-y-3">' + answerButtons(items) + '</div>';
+    body.querySelectorAll(".sndbtn").forEach(b => b.onclick = () => cfg.sounds[+b.dataset.i].play());
+    body.querySelectorAll(".pick").forEach(b => b.addEventListener("click", () => {
+      const a = items[+b.dataset.i]; b.classList.add("picked"); finish(a.s, a.m);
+    }));
   };
-  if (cur && cur !== next){
-    cur.classList.add("leave");
-    setTimeout(() => { cur.classList.remove("active","leave"); enter(); }, 250);
-  } else enter();
 }
-
-$("muteBtn").addEventListener("click", () => {
-  muted = !muted;
-  $("muteBtn").textContent = muted ? "🔇" : "🔊";
-  if (!muted) { audio(); sfx.pop(1); }
-});
-
-/* =========================================================
-   PROGRESSION & COMPTEUR EN DIRECT
-   ========================================================= */
-function setProgress(done){
-  const pct = Math.round(done / EPREUVES.length * 100);
-  const bar = $("progressBar");
-  bar.style.width = pct + "%";
-  const hue = 340 - pct * 2.1;
-  bar.style.backgroundColor = "hsl(" + hue + " 95% 58%)";
-  bar.style.boxShadow = "0 0 " + (8 + pct/5) + "px hsl(" + hue + " 100% 60%)";
-}
-const avg = () => scores.length ? Math.round(scores.reduce((a,b) => a + b, 0) / scores.length) : 0;
-function updateMeter(){
-  const chip = $("meterChip");
-  chip.style.display = scores.length ? "inline-flex" : "none";
-  $("meterNum").textContent = avg() + "%";
-  chip.animate([{transform:"scale(1.4) rotate(-6deg)"},{transform:"scale(1) rotate(0)"}], {duration:300, easing:"cubic-bezier(.3,1.6,.5,1)"});
-}
-
-/* =========================================================
-   LANCEMENT & DÉROULÉ
-   ========================================================= */
-function startGame(){
-  audio();
-  scores = []; epIndex = 0;
-  $("progressWrap").classList.add("on");
-  $("meterChip").style.display = "none";
-  setProgress(0);
-  runEpreuve(0, true);
-  show("play");
-}
-
-function runEpreuve(i, first){
-  epIndex = i; epToken++;
-  const token = epToken, ep = EPREUVES[i];
-  let done = false;
-  $("epStep").textContent = "ÉPREUVE " + (i+1) + "/" + EPREUVES.length;
-  $("epBadge").textContent = ep.badge;
-  $("epTitle").textContent = ep.title;
-  $("epInstr").textContent = ep.instr;
-  $("epBody").innerHTML = "";
-  const card = $("epCard");
-  card.classList.remove("qcard-in"); void card.offsetWidth; card.classList.add("qcard-in");
-  if (!first){ sfx.whoosh(); window.scrollTo({top:0, behavior:"smooth"}); }
-
-  keyHandler = (e) => {
-    const n = parseInt(e.key, 10);
-    if (n >= 1 && n <= 4){ const b = document.querySelectorAll("#epBody .pick")[n-1]; if (b) b.click(); }
-  };
-
-  const finish = (score, msg) => {
-    if (done || token !== epToken) return;
-    done = true; epToken++; keyHandler = null;
-    scores[i] = score;
-    setProgress(i + 1); updateMeter();
-    feedback(score, msg, () => {
-      if (i + 1 < EPREUVES.length) runEpreuve(i + 1);
-      else runAnalysis();
-    });
-  };
-  ep.render($("epBody"), finish);
-}
-
-function feedback(score, msg, cb){
-  const gain = score / 100 * (100 / EPREUVES.length);
-  const gainTxt = "+" + gain.toFixed(1).replace(".", ",").replace(",0", "") + "%";
-  const [emoji, title, color] =
-    score >= 85 ? ["🎯", "PARFAIT !", "#5FD38D"] :
-    score >= 60 ? ["🔥", "BIEN JOUÉ !", "#FFD93D"] :
-    score >= 30 ? ["👍", "PAS MAL !", "#4D96FF"] :
-    score >= 1  ? ["😬", "BOF…", "#FF9F45"] :
-                  ["🧍", "PNJ DÉTECTÉ !", "#FF6FA8"];
-  $("fbCard").style.background = color;
-  $("fbCard").innerHTML =
-    '<div class="text-6xl mb-1">' + emoji + '</div>' +
-    '<div class="display" style="font-size:clamp(2.2rem,11vw,3.6rem);line-height:1.05">' + title + '</div>' +
-    '<div class="display mt-1" style="font-size:clamp(2rem,10vw,3rem);-webkit-text-stroke:2px #111;color:#fff;text-shadow:3px 3px 0 #111">' + gainTxt + '</div>' +
-    '<p class="font-bold mt-3 text-base sm:text-lg">' + msg + '</p>' +
-    '<p class="text-xs mt-3 opacity-60">Touche pour continuer</p>';
-  const fb = $("fb");
-  fb.classList.add("on");
-  sfx.win(score); if (score === 0) setTimeout(() => sfx.bonk(), 200);
-  let gone = false;
-  const go = () => { if (gone) return; gone = true; fb.classList.remove("on"); fb.onclick = null; cb(); };
-  fb.onclick = go;
-  setTimeout(go, msg.length > 70 ? 2800 : 2200);
-}
-
-/* =========================================================
-   FAUX ÉCRAN D'ANALYSE (3,5 s)
-   ========================================================= */
-const LOAD_MSGS = [
-  "Analyse du volume sonore préféré…",
-  "Mesure du temps de réaction face au carré tordu…",
-  "Calibrage de la tolérance aux petites cuillères…",
-  "Calcul du taux d'évitement des gens dans la rue…",
-  "Comptage des onglets Wikipédia ouverts…",
-  "Compilation des hyperfixations de 2019 à aujourd'hui…"
-];
-function runAnalysis(){
-  $("progressWrap").classList.remove("on");
-  $("meterChip").style.display = "none";
-  show("loading");
-  const DURATION = 3500;
-  setTimeout(() => sfx.rise(3.5), 300);
-  const start = performance.now() + 350;
-  let msgI = -1;
-  const msgEl = $("loadMsg");
-  const loop = (now) => {
-    const t = Math.max(0, Math.min(1, (now - start) / DURATION));
-    const eased = t < .5 ? 2*t*t : 1 - Math.pow(-2*t + 2, 2)/2;
-    const pct = Math.round(eased * 100);
-    $("gauge").style.width = pct + "%";
-    $("loadPct").textContent = pct + "%";
-    const mi = Math.min(LOAD_MSGS.length - 1, Math.floor(t * LOAD_MSGS.length));
-    if (mi !== msgI){ msgI = mi; msgEl.textContent = LOAD_MSGS[mi]; msgEl.animate([{opacity:0, transform:"translateY(10px)"},{opacity:1, transform:"none"}], {duration:220}); }
-    if (t < 1) requestAnimationFrame(loop);
-    else setTimeout(showResult, 250);
-  };
-  requestAnimationFrame(loop);
-}
-
-/* =========================================================
-   RÉSULTAT
-   ========================================================= */
-let lastPct = 0, lastTier = null, lastStats = null, lastBest = "";
-function computeResults(){
-  const pct = avg();
-  const stats = STATS.map(s => {
-    let n = 0, d = 0;
-    EPREUVES.forEach((e, i) => { const w = e.w[s.key] || 0; n += (scores[i] || 0) * w; d += w; });
-    return { ...s, pct: d ? Math.round(n / d) : 0 };
-  });
-  const tier = TIERS.find(t => pct <= t.max) || TIERS[TIERS.length-1];
-  let best = 0; scores.forEach((s, i) => { if (s > scores[best]) best = i; });
-  return { pct, stats, tier, best };
-}
-
-function showResult(){
-  const { pct, stats, tier, best } = computeResults();
-  lastPct = pct; lastTier = tier; lastStats = stats;
-  lastBest = EPREUVES[best].name + " (" + scores[best] + "%)";
-
-  $("bigPct").textContent = "0%";
-  $("rankEmoji").textContent = tier.emoji;
-  $("rankTitle").textContent = tier.title;
-  $("rankBox").style.background = tier.color;
-  $("rankDesc").textContent = tier.desc;
-  $("bestRes").textContent = "🏆 Épreuve la plus marquante : " + lastBest;
-
-  $("stats").innerHTML = stats.map(s =>
-    '<div class="wiggle">' +
-      '<div class="flex items-baseline justify-between gap-2 mb-1">' +
-        '<span class="font-bold text-sm sm:text-base">' + s.emoji + ' ' + s.label + '</span>' +
-        '<span class="display text-lg" data-statpct="' + s.key + '">0%</span>' +
-      '</div>' +
-      '<div class="statbar"><div class="statfill" data-fill="' + s.key + '" style="background-color:' + s.color + '"></div></div>' +
-    '</div>').join("");
-
-  show("result", true);
-  setTimeout(() => $("actionBar").classList.add("on"), 400);
-  sfx.fanfare();
-  launchConfetti();
-
-  const dur = 2400, t0 = performance.now();
-  let lastTick = 0;
-  const step = (now) => {
-    const t = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - t, 4);
-    const v = Math.round(pct * e);
-    $("bigPct").textContent = v + "%";
-    if (v - lastTick >= 4){ lastTick = v; sfx.tick(); }
-    if (t < 1) requestAnimationFrame(step);
-    else { $("bigPct").animate([{transform:"scale(1.18)"},{transform:"scale(1)"}], {duration:400, easing:"cubic-bezier(.3,1.6,.5,1)"}); }
-  };
-  requestAnimationFrame(step);
-
-  stats.forEach((s, i) => {
-    setTimeout(() => {
-      const f = document.querySelector('[data-fill="' + s.key + '"]');
-      f.classList.toggle("zero", s.pct === 0);
-      f.style.width = s.pct + "%";
-      const label = document.querySelector('[data-statpct="' + s.key + '"]');
-      const t0s = performance.now();
-      const run = (now) => { const t = Math.min(1,(now - t0s)/1400), e = 1 - Math.pow(1 - t, 3); label.textContent = Math.round(s.pct * e) + "%"; if (t < 1) requestAnimationFrame(run); };
-      requestAnimationFrame(run);
-      sfx.pop(i);
-    }, 700 + i * 350);
-  });
-}
-
-function launchConfetti(){
-  if (typeof confetti !== "function") return;
-  const colors = ["#FF6FA8","#FFD93D","#4D96FF","#5FD38D","#A66BFF","#FF9F45"];
-  confetti({ particleCount:140, spread:100, origin:{ y:.55 }, colors });
-  const end = Date.now() + 2000;
-  (function frame(){
-    confetti({ particleCount:5, angle:60,  spread:60, origin:{ x:0, y:.7 }, colors });
-    confetti({ particleCount:5, angle:120, spread:60, origin:{ x:1, y:.7 }, colors });
-    if (Date.now() < end) requestAnimationFrame(frame);
-  })();
-}
-
-/* =========================================================
-   COPIER LE SCORE
-   ========================================================= */
-function bar(p){ const n = Math.round(p / 10); return "█".repeat(n) + "░".repeat(10 - n); }
-function buildSummary(){
-  const lines = [
-    "🧠 J'ai fait le test, je suis autiste à " + lastPct + "% (" + lastTier.title + ") " + lastTier.emoji,
-    "",
-    ...lastStats.map(s => s.emoji + " " + s.label + "\n" + bar(s.pct) + " " + s.pct + "%"),
-    "",
-    "🏆 Épreuve la plus marquante : " + lastBest,
-    "",
-    "Et toi, t'es à combien ? 👀"
-  ];
-  return lines.join("\n");
-}
-async function copyText(text){
-  try { await navigator.clipboard.writeText(text); return true; }
-  catch (e) {
-    const ta = document.createElement("textarea");
-    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
-    document.body.appendChild(ta); ta.select();
-    let ok = false; try { ok = document.execCommand("copy"); } catch (_) {}
-    ta.remove(); return ok;
-  }
-}
-let toastT;
-async function copyResult(){
-  const ok = await copyText(buildSummary());
-  const t = $("toast");
-  t.textContent = ok ? "Copié ! ✅" : "Impossible de copier 😕";
-  t.classList.add("on"); sfx.pop(3);
-  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("on"), 1900);
-  if (ok && typeof confetti === "function") confetti({ particleCount:40, spread:60, origin:{ y:.85 } });
-}
-
-/* =========================================================
-   INIT & ÉVÉNEMENTS
-   ========================================================= */
-$("startBtn").addEventListener("click", startGame);
-$("copyBtn").addEventListener("click", copyResult);
-$("replayBtn").addEventListener("click", () => { audio(); sfx.pop(2); show("intro"); });
-
-document.addEventListener("keydown", (e) => { if (keyHandler) keyHandler(e); });
-
-const cur = $("cursor");
-window.addEventListener("mousemove", (e) => { cur.style.transform = "translate(" + e.clientX + "px," + e.clientY + "px)"; });
-document.addEventListener("mouseover", (e) => { cur.classList.toggle("big", !!e.target.closest("button")); });
-</script>
-</body>
-</html>
